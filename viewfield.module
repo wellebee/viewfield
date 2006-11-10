@@ -1,0 +1,208 @@
+<?php
+// $Id$
+
+/**
+ * @file
+ * Defines a field type for referencing a view from a node
+ */
+
+/**
+ * Implementation of hook_help().
+ */
+function viewfield_help($section) {
+  switch ($section) {
+    case 'admin/modules#description':
+      return t('<strong>CCK:</strong> Defines a field type for referencing a view from a node. <em>Note: Requires content.module and views.module</em>');
+  }
+}
+
+/**
+ * Implementation of hook_field_info().
+ */
+function viewfield_field_info() {
+  return array(
+    'viewfield' => array('label' => 'View Reference'),
+  );
+}
+
+/**
+ * Implementation of hook_field_settings().
+ */
+function viewfield_field_settings($op, $field) {
+  switch ($op) {
+  /* These are off until we need them
+    case 'form':
+      return $form;
+
+    case 'save':
+      return array(); */
+
+    case 'database columns':
+      $columns = array(
+        'vname' => array('type' => 'char', 'length' => 32),
+        'vargs' => array('type' => 'varchar', 'not null' => false, 'default' => "''", 'sortable' => TRUE, 'length' => 255),
+      );
+
+      return $columns;
+  }
+}
+
+/**
+ * Implementation of hook_field().
+ */
+function viewfield_field($op, &$node, $field, &$items, $teaser, $page) {
+  switch ($op) {
+    case 'view':
+          
+      foreach ($items as $delta => $item) {
+        
+        // todo build in limits and unexpose exposed filters
+        global $user;
+        $view = views_get_view($item['vname']);
+        $translated_args = strtr($item['vargs'], array('%nid' => $node->nid, '%author' => $node->nid, '%viewer' => $user->uid));
+        $args = explode(',', $translated_args);
+        
+        // need to prevent recusive views and node building
+        _viewfield_nodestack_push($node->nid);
+        $items[$delta]['view'] = views_build_view('embed', $view, $args, FALSE, $view->nodes_per_page);
+        // this node is "safe" again
+        _viewfield_nodestack_pop();
+      }
+      $output = theme('field', $node, $field, $items, $teaser, $page);
+      return $output;
+  }
+}
+
+
+/**
+ * Implementation of hook_widget_info().
+ */
+function viewfield_widget_info() {
+  return array(
+    'viewfield_select' => array(
+      'label' => 'Select List',
+      'field types' => array('viewfield'),
+    ), /*
+    'viewfield_autocomplete' => array(
+      'label' => 'Autocomplete View Field',
+      'field types' => array('viewfield'),
+    ), */
+  );
+}
+
+/**
+ * Implementation of hook_widget().
+ */
+function viewfield_widget($op, &$node, $field, &$node_field) {
+
+  switch ($op) {
+    case 'prepare form values':
+      $node_field_transposed = content_transpose_array_rows_cols($node_field);
+      $node_field['default vnames'] = $node_field_transposed['vname'];
+      break;
+
+    case 'form':
+      $form = array();
+
+      $options = _viewfield_potential_references($field);
+      
+      $form[$field['field_name']] = array('#tree' => TRUE);
+      $form[$field['field_name']]['vnames'] = array(
+        '#type' => 'select',
+        '#title' => t($field['widget']['label']),
+        '#default_value' => $node_field['default vnames'],
+        '#multiple' => $field['multiple'],
+        '#options' => $options,
+        '#required' => $field['required'],
+        '#description' => $field['widget']['description'],
+      );
+
+      $form[$field['field_name']]['vargs'] = array(
+        '#type' => 'textarea',
+        '#title' => 'arguments',
+        '#default_value' => $node_field[0]['vargs'], // all views share args (for now ...)
+        '#required' => false,
+        '#description' => t('Provide a comma separated list of arguments to pass to the view. You may use %nid for the node id of the current node. %author for the node author and %viewer for user viewing the node. These arguments will be passed to EACH selected view.'),
+      );
+
+      return $form;
+
+    case 'process form values':
+      if ($field['multiple']) {
+        $items = $node_field['vnames'];
+        foreach($items as $item) {
+          $node_field[] = array (
+            'vname' => $item,
+            'vargs' => $node_field['vargs'],
+          );
+        }
+      }
+      else {
+        $node_field[0]['vname'] = $node_field['vnames'];
+        $node_field[0]['vargs'] = $node_field['vargs'];
+      }
+      // Remove the widget's data representation so it isn't saved.
+      unset($node_field['vnames']);
+      unset($node_field['vargs']);
+      
+  }
+}
+
+/*** Private functions ***/
+
+/**
+ * Prepare a list of views for selection.
+ */
+function _viewfield_potential_references($field) {
+  $options = array();
+  
+  $default_views = _views_get_default_views();
+
+  $res = db_query("SELECT name FROM {view_view} ORDER BY name");
+  while ($view = db_fetch_object($res)) {
+    $options[$view->name] = $view->name; 
+  }
+  
+  if(is_array($default_views)) {
+    foreach($default_views as $key => $view) {
+      $options[$key] = $view->name;
+    }
+  }
+  
+  return $options;
+}
+
+/**
+ * Functions for manipulating a global stack of nids. This prevents us from recursively
+ * building a node, with a view, with the node, with the view.... etc
+ */
+function _viewfield_nodestack_push($nid) {
+  global $viewfield_stack;
+  if (!isset($viewfield_stack)) {
+    $_GLOBAL['viewfield_stack'] = array();
+    global $viewfield_stack;
+  }
+  
+  $viewfield_stack[] = $nid;
+  
+}
+
+function _viewfield_nodestack_pop() {
+  global $viewfield_stack;
+  return array_pop($viewfield_stack);
+}
+
+/** 
+ * Implementation of hook_db_rewrite_sql
+ *
+ * Prevent views from loading the node containing the view.
+ */
+function viewfield_db_rewrite_sql($query, $primary_table, $primary_field, $args) {
+  global $viewfield_stack;
+  if (!empty($viewfield_stack)) {
+    if ($primary_table == 'node') {
+      $return['where'] = 'node.nid NOT IN (' . implode(',', $viewfield_stack). ')';
+      return $return;
+    }
+  }
+}
