@@ -59,7 +59,7 @@ function viewfield_field($op, &$node, $field, &$items, $teaser, $page) {
         // todo build in limits and unexpose exposed filters
         global $user;
         $view = views_get_view($item['vname']);
-        $translated_args = strtr($item['vargs'], array('%nid' => $node->nid, '%author' => $node->nid, '%viewer' => $user->uid));
+        $translated_args = strtr($item['vargs'], array('%nid' => $node->nid, '%author' => $node->uid, '%viewer' => $user->uid));
         $args = explode(',', $translated_args);
         
         // need to prevent recusive views and node building
