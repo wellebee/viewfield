@@ -44,6 +44,18 @@ function viewfield_field_settings($op, $field) {
       );
 
       return $columns;
+    
+    /*
+    case 'filters':
+      return array(
+        'default' => array(
+        'list' => '_viewfield_filter_handler',
+        'list-type' => 'list',
+        'operator' => 'views_handler_operator_or',
+        'value-type' => 'array',
+        'extra' => array('field' => $field),
+      ),
+    ); */
   }
 }
 
@@ -73,6 +85,46 @@ function viewfield_field($op, &$node, $field, &$items, $teaser, $page) {
   }
 }
 
+/**
+ * Implementation of hook_field_formatter_info().
+ */
+function viewfield_field_formatter_info() {
+  return array(
+    'count' => array(
+      'label' => 'Count of items in view',
+      'field types' => array('viewfield'),
+    ),
+    'view' => array(
+      'label' => 'Entire view',
+      'field types' => array('viewfield'),
+    ),
+  );
+}
+
+/**
+ * Implementation of hook_field_formatter().
+ */
+function viewfield_field_formatter($field, $item, $formatter, $node) {
+
+  if (!empty($item['vname'])) {
+    // XXX this probably not multi-select safe...
+    $view = views_get_view($item['vname']);
+    $args = $item['vargs'];
+
+    switch ($formatter) {
+      case 'count':
+        $results = views_build_view('items', $view, $args);
+        $count = count($results['items']);
+        return $count;
+
+      case 'view':
+        return views_build_view('embed', $view, $args);
+
+      default:
+        return $text;
+    }
+  }
+}
 
 /**
  * Implementation of hook_widget_info().
