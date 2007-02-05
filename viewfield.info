@@ -1,0 +1,5 @@
+; $Id$
+name = View field
+description = Defines a field type that displays the contents of a view in a node.
+package = CCK
+dependencies = views content

@@ -6,15 +6,6 @@
  * Defines a field type for referencing a view from a node
  */
 
-/**
- * Implementation of hook_help().
- */
-function viewfield_help($section) {
-  switch ($section) {
-    case 'admin/modules#description':
-      return t('<strong>CCK:</strong> Defines a field type for referencing a view from a node. <em>Note: Requires content.module and views.module</em>');
-  }
-}
 
 /**
  * Implementation of hook_field_info().
@@ -44,35 +35,91 @@ function viewfield_field_settings($op, $field) {
       );
 
       return $columns;
+
+    /*
+    case 'filters':
+      return array(
+        'default' => array(
+        'list' => '_viewfield_filter_handler',
+        'list-type' => 'list',
+        'operator' => 'views_handler_operator_or',
+        'value-type' => 'array',
+        'extra' => array('field' => $field),
+      ),
+    ); */
   }
 }
 
 /**
- * Implementation of hook_field().
+ * Implementation of hook_field_formatter_info().
  */
-function viewfield_field($op, &$node, $field, &$items, $teaser, $page) {
-  switch ($op) {
-    case 'view':
-          
-      foreach ($items as $delta => $item) {
-        
-        // todo build in limits and unexpose exposed filters
-        global $user;
-        $view = views_get_view($item['vname']);
-        $translated_args = strtr($item['vargs'], array('%nid' => $node->nid, '%author' => $node->uid, '%viewer' => $user->uid));
-        $args = explode(',', $translated_args);
-        
-        // need to prevent recusive views and node building
-        _viewfield_nodestack_push($node->nid);
-        $items[$delta]['view'] = views_build_view('embed', $view, $args, FALSE, $view->nodes_per_page);
-        // this node is "safe" again
-        _viewfield_nodestack_pop();
-      }
-      $output = theme('field', $node, $field, $items, $teaser, $page);
-      return $output;
-  }
+function viewfield_field_formatter_info() {
+  return array(
+    'default' => array(
+      'label' => 'Entire view',
+      'field types' => array('viewfield'),
+    ),
+    'count' => array(
+      'label' => 'Count of items in view',
+      'field types' => array('viewfield'),
+    ),
+  );
 }
 
+/**
+ * Implementation of hook_field_formatter().
+ */
+function viewfield_field_formatter($field, $item, $formatter, $node) {
+
+  if (!empty($item['vname'])) {
+    // XXX this probably not multi-select safe...
+    global $user;
+    $view = views_get_view($item['vname']);
+    $translated_args = strtr($item['vargs'], array('%nid' => $node->nid, '%author' => $node->nid, '%viewer' => $user->uid));
+    $args = explode(',', $translated_args);
+    
+    // need to prevent recusive views and node building, but don't need to do it on new node previews
+    if ($node->nid) {
+      _viewfield_nodestack_push($node->nid);
+    }
+
+    switch ($formatter) {
+      default:
+        if ($view->use_pager) {
+        	// fix for multiple pagers
+          global $pager_total;
+          static $viewfield_pager_elements = array();
+          $key = $node->nid . '-' . $field['field_name'] . '-' . $view->name;  // set a unique key for the view in the current node
+          if (!isset($viewfield_pager_elements[$key])) {
+            // set the viewfield pager element to the max + 1
+            $max1 = is_array($pager_total) ? @max(array_values($pager_total)) : 1;
+            $max2 = @max(array_values($viewfield_pager_elements));
+            $viewfield_pager_elements[$key] = @max($max1, $max2) + 1;
+          }
+          $use_pager = $viewfield_pager_elements[$key];
+        }
+        else {
+          $use_pager = 0;
+        }
+        $output = views_build_view('embed', $view, $args, $use_pager, $view->nodes_per_page);
+        break;
+        
+      case 'count':
+        // TODO use the the new 'queries' $op instead
+        $results = views_build_view('items', $view, $args);
+        $count = count($results['items']);
+        $output = $count;
+        break;
+    }
+    
+    // this node is "safe" again
+    if ($node->nid) {
+      _viewfield_nodestack_pop();
+    }
+    
+    return $output;
+  }
+}
 
 /**
  * Implementation of hook_widget_info().
@@ -155,7 +202,7 @@ function viewfield_widget($op, &$node, $field, &$node_field) {
  */
 function _viewfield_potential_references($field) {
   $options = array();
-  
+  include_once(drupal_get_path('module', 'views') . '/views_cache.inc');
   $default_views = _views_get_default_views();
 
   $res = db_query("SELECT name FROM {view_view} ORDER BY name");
@@ -200,8 +247,8 @@ function _viewfield_nodestack_pop() {
 function viewfield_db_rewrite_sql($query, $primary_table, $primary_field, $args) {
   global $viewfield_stack;
   if (!empty($viewfield_stack)) {
-    if ($primary_table == 'node') {
-      $return['where'] = 'node.nid NOT IN (' . implode(',', $viewfield_stack). ')';
+    if ($primary_field == 'nid') {
+      $return['where'] = "$primary_table.nid NOT IN (" . implode(',', $viewfield_stack). ')';
       return $return;
     }
   }
