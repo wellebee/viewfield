@@ -54,9 +54,9 @@ function viewfield_field_settings($op, $field) {
  * Implementation of hook_field_formatter_info().
  */
 function viewfield_field_formatter_info() {
-  return array(
+  $formatters =  array(
     'default' => array(
-      'label' => 'Entire view',
+      'label' => 'Entire view (using default style)',
       'field types' => array('viewfield'),
     ),
     'count' => array(
@@ -64,25 +64,46 @@ function viewfield_field_formatter_info() {
       'field types' => array('viewfield'),
     ),
   );
+  
+  include_once(drupal_get_path('module', 'views') .'/views_cache.inc');
+  $plugins = _views_get_style_plugins();
+  foreach ($plugins as $type => $details) {
+    $formatters[$type] = array(
+      'label' => $details['name'],
+      'field types' => array('viewfield')
+    );
+  }
+  
+  return $formatters;
 }
 
 /**
  * Implementation of hook_field_formatter().
  */
 function viewfield_field_formatter($field, $item, $formatter, $node) {
+  // these are Eaton's tests for his normal, defaults, content type wide settings stuff
+  //$v = ($field['configurability'] == 'none') ? $field['vname'] : $item['vname'];
+  //$a = ($field['configurability'] == 'none') ? $field['vargs'] : $item['vargs'];
 
-  if (!empty($item['vname'])) {
+  // using the $v, $a convention in case I uncomment the above lines.
+  $v = $item['vname'];
+  $a = $item['vargs'];
+  
+  if (!empty($v)) {
     // XXX this probably not multi-select safe...
     global $user;
-    $view = views_get_view($item['vname']);
-    $translated_args = strtr($item['vargs'], array('%nid' => $node->nid, '%author' => $node->nid, '%viewer' => $user->uid));
+    $view = views_get_view($v);
+    $translated_args = strtr($a, array('%nid' => $node->nid, '%author' => $node->uid, '%viewer' => $user->uid));
     $args = explode(',', $translated_args);
+    if ($formatter != 'default' && $formatter != 'count') {
+      $view->page_type = $formatter;
+    }
     
     // need to prevent recusive views and node building, but don't need to do it on new node previews
     if ($node->nid) {
       _viewfield_nodestack_push($node->nid);
     }
-
+    
     switch ($formatter) {
       default:
         if ($view->use_pager) {
