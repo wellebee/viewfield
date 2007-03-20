@@ -93,7 +93,15 @@ function viewfield_field_formatter($field, $item, $formatter, $node) {
     // XXX this probably not multi-select safe...
     global $user;
     $view = views_get_view($v);
-    $translated_args = strtr($a, array('%nid' => $node->nid, '%author' => $node->uid, '%viewer' => $user->uid));
+    if (module_exists('token')) {
+      dprint_r($a);
+      dprint_r($node);
+      $translated_args = token_replace_multiple($a, array('node' => $node));
+      dprint_r($translated_args);
+	  }
+    else {
+      $translated_args = strtr($a, array('%nid' => $node->nid, '%author' => $node->uid, '%viewer' => $user->uid));
+    }
     $args = explode(',', $translated_args);
     if ($formatter != 'default' && $formatter != 'count') {
       $view->page_type = $formatter;
@@ -114,7 +122,10 @@ function viewfield_field_formatter($field, $item, $formatter, $node) {
           if (!isset($viewfield_pager_elements[$key])) {
             // set the viewfield pager element to the max + 1
             $max1 = is_array($pager_total) ? @max(array_values($pager_total)) : 1;
-            $max2 = @max(array_values($viewfield_pager_elements));
+            // without this fix below i get an error with php4
+            $av = array_values($viewfield_pager_elements);
+            $max2 = $av ? max($av) : 0;
+            //$max2 = @max(array_values($viewfield_pager_elements));
             $viewfield_pager_elements[$key] = @max($max1, $max2) + 1;
           }
           $use_pager = $viewfield_pager_elements[$key];
@@ -186,12 +197,30 @@ function viewfield_widget($op, &$node, $field, &$node_field) {
       );
 
       $form[$field['field_name']]['vargs'] = array(
-        '#type' => 'textarea',
+        '#type' => 'textfield',
         '#title' => 'arguments',
         '#default_value' => $node_field[0]['vargs'], // all views share args (for now ...)
         '#required' => false,
-        '#description' => t('Provide a comma separated list of arguments to pass to the view. You may use %nid for the node id of the current node. %author for the node author and %viewer for user viewing the node. These arguments will be passed to EACH selected view.'),
+        '#description' => t('Provide a comma separated list of arguments to pass to the view. These arguments will be passed to EACH selected view.'),
       );
+
+      // TODO: token support right now a bit hacked on ... needs better integration
+      // ev. checkbox to enable/disable use of token-module here
+	  if (module_exists('token')) {
+  		$form[$field['field_name']]['vargs']['#description'] .= '<br/>'.
+  		  t('Use the syntax [token] if you want to insert a replacement pattern.');
+          $form[$field['field_name']]['token_help'] = array(
+            '#title' => t('Replacement patterns'),
+            '#type' => 'fieldset',
+            '#collapsible' => TRUE,
+            '#collapsed' => TRUE,
+          );
+        $form[$field['field_name']]['token_help']['help'] = array(
+          '#value' => theme('token_help', 'node'),
+        );
+  	} else {
+  	   $form[$field['field_name']]['vargs']['#description'] .= '<br/>' . t('You may use %nid for the node id of the current node. %author for the node author and %viewer for user viewing the node.'); 
+  	}
 
       return $form;
 
