@@ -93,16 +93,15 @@ function viewfield_field_formatter($field, $item, $formatter, $node) {
     // XXX this probably not multi-select safe...
     global $user;
     $view = views_get_view($v);
+/* -- TODO uncomment when token doesn't cause recursion issues
     if (module_exists('token')) {
-			//dprint_r("In token module section");
-      //dprint_r($a);
-      //dprint_r($node);
-      #$translated_args = token_replace_multiple($a, array('node' => $node));
-      //dprint_r($translated_args);
+      $translated_args = token_replace_multiple($a, array('node' => $node));
 	  }
     else {
       $translated_args = strtr($a, array('%nid' => $node->nid, '%author' => $node->uid, '%viewer' => $user->uid));
     }
+*/
+		$translated_args = strtr($a, array('%nid' => $node->nid, '%author' => $node->uid, '%viewer' => $user->uid));
     $args = explode(',', $translated_args);
     if ($formatter != 'default' && $formatter != 'count') {
       $view->page_type = $formatter;
@@ -207,6 +206,7 @@ function viewfield_widget($op, &$node, $field, &$node_field) {
 
       // TODO: token support right now a bit hacked on ... needs better integration
       // ev. checkbox to enable/disable use of token-module here
+/* -- TODO uncomment when token works
 	  if (module_exists('token')) {
   		$form[$field['field_name']]['vargs']['#description'] .= '<br/>'.
   		  t('Use the syntax [token] if you want to insert a replacement pattern.');
@@ -222,7 +222,7 @@ function viewfield_widget($op, &$node, $field, &$node_field) {
   	} else {
   	   $form[$field['field_name']]['vargs']['#description'] .= '<br/>' . t('You may use %nid for the node id of the current node. %author for the node author and %viewer for user viewing the node.'); 
   	}
-
+*/		$form[$field['field_name']]['vargs']['#description'] .= '<br/>' . t('You may use %nid for the node id of the current node. %author for the node author and %viewer for user viewing the node.');
       return $form;
 
     case 'process form values':
