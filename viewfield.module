@@ -94,10 +94,11 @@ function viewfield_field_formatter($field, $item, $formatter, $node) {
     global $user;
     $view = views_get_view($v);
     if (module_exists('token')) {
-      dprint_r($a);
-      dprint_r($node);
-      $translated_args = token_replace_multiple($a, array('node' => $node));
-      dprint_r($translated_args);
+			//dprint_r("In token module section");
+      //dprint_r($a);
+      //dprint_r($node);
+      #$translated_args = token_replace_multiple($a, array('node' => $node));
+      //dprint_r($translated_args);
 	  }
     else {
       $translated_args = strtr($a, array('%nid' => $node->nid, '%author' => $node->uid, '%viewer' => $user->uid));
@@ -252,6 +253,13 @@ function viewfield_widget($op, &$node, $field, &$node_field) {
  */
 function _viewfield_potential_references($field) {
   $options = array();
+	
+	// add a null option for non-required fields
+	if (!$field['required'] && !$field['multiple']) {
+			$options[0] = '<' . t('None') . '>';
+	}
+
+
   include_once(drupal_get_path('module', 'views') . '/views_cache.inc');
   $default_views = _views_get_default_views();
 
