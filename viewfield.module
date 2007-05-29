@@ -21,12 +21,26 @@ function viewfield_field_info() {
  */
 function viewfield_field_settings($op, $field) {
   switch ($op) {
-  /* These are off until we need them
+  
     case 'form':
+      
+      $form = array();
+      
+      // Get our list of views, but never have the "none" option.
+      $view_options = _viewfield_potential_references(array('required' => TRUE));
+      
+      $form['allowed_views'] = array(
+        '#type' => 'checkboxes',
+        '#title' => t('Allowed views'),
+        '#default_value' => $field['allowed_views'],
+        '#options' => $view_options,
+        '#description' => t('Only allow users to select from the specified views.  If only one is selected, the user will only be able to specify the arguments.'),
+      );
+      
       return $form;
 
     case 'save':
-      return array(); */
+      return array('allowed_views', 'force_default');
 
     case 'database columns':
       $columns = array(
@@ -64,8 +78,8 @@ function viewfield_field_formatter_info() {
       'field types' => array('viewfield'),
     ),
   );
-  
-  include_once(drupal_get_path('module', 'views') .'/views_cache.inc');
+
+  views_load_cache();
   $plugins = _views_get_style_plugins();
   foreach ($plugins as $type => $details) {
     $formatters[$type] = array(
@@ -170,6 +184,26 @@ function viewfield_widget_info() {
 }
 
 /**
+ * Implementation of hook_widget_settings().
+ */
+function viewfield_widget_settings($op, $widget) {
+  switch ($op) {
+    case 'form':
+      $form = array();
+      $form['force_default'] = array(
+        '#type' => 'checkbox',
+        '#title' => t('Force default'),
+        '#default_value' => $field['force_default'],
+        '#description' => t('If checked, the user will not be able to change anything about the view at all.  It will not even be shown on the edit node page.  The default value will be used instead.'),
+      );
+      return $form;
+    case 'save':
+      return array('force_default');
+  }
+}
+
+
+/**
  * Implementation of hook_widget().
  */
 function viewfield_widget($op, &$node, $field, &$node_field) {
@@ -178,31 +212,82 @@ function viewfield_widget($op, &$node, $field, &$node_field) {
     case 'prepare form values':
       $node_field_transposed = content_transpose_array_rows_cols($node_field);
       $node_field['default vnames'] = $node_field_transposed['vname'];
+      
+
       break;
 
     case 'form':
+    
+      // for the administration page, the allowed views might not be set yet...
+      if (!isset($field['allowed_views'])) {
+        $field['allowed_views'] = _viewfield_potential_references(array());
+      }
+    
       $form = array();
 
-      $options = _viewfield_potential_references($field);
-      
       $form[$field['field_name']] = array('#tree' => TRUE);
-      $form[$field['field_name']]['vnames'] = array(
-        '#type' => 'select',
-        '#title' => t($field['widget']['label']),
-        '#default_value' => $node_field['default vnames'],
-        '#multiple' => $field['multiple'],
-        '#options' => $options,
-        '#required' => $field['required'],
-        '#description' => $field['widget']['description'],
-      );
-
-      $form[$field['field_name']]['vargs'] = array(
-        '#type' => 'textfield',
-        '#title' => 'arguments',
-        '#default_value' => $node_field[0]['vargs'], // all views share args (for now ...)
-        '#required' => false,
-        '#description' => t('Provide a comma separated list of arguments to pass to the view. These arguments will be passed to EACH selected view.'),
-      );
+      
+      // This form is used for both the default value field in the admin as well as the 
+      // node edit form, so we have to make sure we show the default value field always.
+      // It just wouldn't do to force the default value and make the default value unconfigurable, now would it?
+      if ($field['widget']['force_default'] && isset($node->uid) && !user_access('administer nodes')) {
+        $form[$field['field_name']]['vnames'] = array(
+          '#type' => 'value',
+          '#value' => $field['widget']['default_value'][0]['vname'],
+        );
+        $form[$field['field_name']]['vargs'] = array(
+          '#type' => 'value',
+          '#value' => $field['widget']['default_value'][0]['vargs'], // all views share args (for now ...)
+        );
+      }
+      else {
+        // Display the form to let the user pick a view
+        $options = _viewfield_potential_references($field);
+      
+        $allowed_views = array_flip($field['allowed_views']);
+        unset($allowed_views[0]);
+        foreach ($options as $key => $value) {
+          if (! (0 === $key || in_array($key, $allowed_views))) {
+            unset($options[$key]);
+          }
+        }
+        
+        if (count($options) > 1) {
+          $form[$field['field_name']]['vnames'] = array(
+            '#type' => 'select',
+            '#title' => t($field['widget']['label']),
+            '#default_value' => $node_field['default vnames'],
+            '#multiple' => $field['multiple'],
+            '#options' => $options,
+            '#required' => $field['required'],
+            '#description' => $field['widget']['description'],
+          );
+          $form[$field['field_name']]['vargs'] = array(
+            '#type' => 'textfield',
+            '#title' => t('Arguments'),
+            '#default_value' => $node_field[0]['vargs'], // all views share args (for now ...)
+            '#required' => false,
+            '#description' => t('Provide a comma separated list of arguments to pass to the view. These arguments will be passed to EACH selected view.'),
+          );
+        }
+        else {
+          // There's only the one view, so only show the arguments
+          list($key, $label) = each($options);
+          $form[$field['field_name']]['vnames'] = array(
+            '#type' => 'value',
+            '#value' => $key,
+            '#title' => t($value),
+          );
+          $form[$field['field_name']]['vargs'] = array(
+            '#type' => 'textfield',
+            '#title' => t($field['widget']['label']) . ' (' . t($label) . ') ' . t('arguments'),
+            '#default_value' => $node_field[0]['vargs'], // all views share args (for now ...)
+            '#required' => false,
+            '#description' => t('Provide a comma separated list of arguments to pass to the view. These arguments will be passed to EACH selected view.'),
+          );
+          
+        }
+      }
 
       // TODO: token support right now a bit hacked on ... needs better integration
       // ev. checkbox to enable/disable use of token-module here
