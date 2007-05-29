@@ -44,7 +44,7 @@ function viewfield_field_settings($op, $field) {
 
     case 'database columns':
       $columns = array(
-        'vname' => array('type' => 'char', 'length' => 32),
+        'vname' => array('type' => 'varchar', 'not null' => true, 'default' => "''", 'length' => 32),
         'vargs' => array('type' => 'varchar', 'not null' => false, 'default' => "''", 'sortable' => TRUE, 'length' => 255),
       );
 
