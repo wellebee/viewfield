@@ -70,7 +70,11 @@ function viewfield_field_settings($op, $field) {
 function viewfield_field_formatter_info() {
   $formatters =  array(
     'default' => array(
-      'label' => 'Entire view (using default style)',
+      'label' => t('Use view "Page" settings'),
+      'field types' => array('viewfield'),
+    ),
+    'block' => array(
+      'label' => t('Use view "Block" settings'),
       'field types' => array('viewfield'),
     ),
     'count' => array(
@@ -126,30 +130,32 @@ function viewfield_field_formatter($field, $item, $formatter, $node) {
       _viewfield_nodestack_push($node->nid);
     }
     
+    if (($formatter == 'block' && $view->block_use_pager) || ($view->use_pager && $formatter != 'block')) {
+    	// fix for multiple pagers
+      global $pager_total;
+      static $viewfield_pager_elements = array();
+      $key = $node->nid . '-' . $field['field_name'] . '-' . $view->name;  // set a unique key for the view in the current node
+      if (!isset($viewfield_pager_elements[$key])) {
+        // set the viewfield pager element to the max + 1
+        $max1 = is_array($pager_total) ? @max(array_values($pager_total)) : 1;
+        $av = array_values($viewfield_pager_elements);
+        $max2 = $av ? max($av) : 0;
+        $viewfield_pager_elements[$key] = @max($max1, $max2) + 1;
+      }
+      $use_pager = $viewfield_pager_elements[$key];
+    }
+    else {
+      $use_pager = 0;
+    }
+    
     switch ($formatter) {
       default:
-        if ($view->use_pager) {
-        	// fix for multiple pagers
-          global $pager_total;
-          static $viewfield_pager_elements = array();
-          $key = $node->nid . '-' . $field['field_name'] . '-' . $view->name;  // set a unique key for the view in the current node
-          if (!isset($viewfield_pager_elements[$key])) {
-            // set the viewfield pager element to the max + 1
-            $max1 = is_array($pager_total) ? @max(array_values($pager_total)) : 1;
-            // without this fix below i get an error with php4
-            $av = array_values($viewfield_pager_elements);
-            $max2 = $av ? max($av) : 0;
-            //$max2 = @max(array_values($viewfield_pager_elements));
-            $viewfield_pager_elements[$key] = @max($max1, $max2) + 1;
-          }
-          $use_pager = $viewfield_pager_elements[$key];
-        }
-        else {
-          $use_pager = 0;
-        }
         $output = views_build_view('embed', $view, $args, $use_pager, $view->nodes_per_page);
         break;
-        
+      
+      case 'block':
+        $output = views_build_view('block', $view, $args, $use_pager, $view->nodes_per_block);
+        break;
       case 'count':
         // TODO use the the new 'queries' $op instead
         $results = views_build_view('items', $view, $args);
