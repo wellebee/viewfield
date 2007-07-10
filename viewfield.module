@@ -19,9 +19,10 @@ function viewfield_field_info() {
 /**
  * Implementation of hook_field_settings().
  */
-function viewfield_field_settings($op, $field) {
-  switch ($op) {
+function viewfield_field_settings($op, &$field) {
   
+  switch ($op) {
+
     case 'form':
       
       $form = array();
@@ -34,21 +35,42 @@ function viewfield_field_settings($op, $field) {
         '#title' => t('Allowed views'),
         '#default_value' => $field['allowed_views'],
         '#options' => $view_options,
-        '#description' => t('Only allow users to select from the specified views.  If only one is selected, the user will only be able to specify the arguments.'),
+        '#description' => t('Only allow users to select from the specified views. If no views are selected, all will be available. If only one is selected, the user will only be able to specify the arguments.'),
+      );
+      
+      $form['super_default'] = array (
+        '#type' => 'checkbox',
+        '#title' => t('Use a common default value for all nodes if the user does not override it on the node form.'),
+        '#default_value' => $field['super_default'],
+      );
+      
+      $dummy = array();
+      $items = $field['super_default_widget'][0][$field['field_name']];
+      $form['super_default_widget'] = array('#tree' => true);
+      viewfield_widget('process form values', $dummy, $field, $items);
+      viewfield_widget('prepare form values', $dummy, $field, $items);
+      $form['super_default_widget'][0] = viewfield_widget('form', $dummy, $field, $items);
+      $form['super_default_widget'][0][$field['field_name']]['override_default'] = array (
+        '#type' => 'value',
+        '#value' => true,
       );
       
       return $form;
-
+      
     case 'save':
-      return array('allowed_views', 'force_default');
+      cache_clear_all('content:', 'cache_content', true);
+      return array('allowed_views', 'super_default', 'super_default_widget');
 
     case 'database columns':
       $columns = array(
-        'vname' => array('type' => 'varchar', 'not null' => true, 'default' => "''", 'length' => 32),
+        'vname' => array('type' => 'varchar', 'not null' => false, 'default' => "''", 'length' => 32),
         'vargs' => array('type' => 'varchar', 'not null' => false, 'default' => "''", 'sortable' => TRUE, 'length' => 255),
       );
 
       return $columns;
+      
+    case 'callbacks':
+      return array('view' => CONTENT_CALLBACK_CUSTOM);
 
     /*
     case 'filters':
@@ -95,14 +117,37 @@ function viewfield_field_formatter_info() {
   return $formatters;
 }
 
+function viewfield_field($op, &$node, $field, &$node_field, $teaser, $page) {
+ 
+  if ($op == 'load') {
+    if(!isset($node_field[0]['vname'])) {
+      // we're in default land here...
+      $items = $field['super_default_widget'][0][$field['field_name']];
+      viewfield_widget('process form values', $node, $field, $items);
+      $items['default'] = true;
+      $adds = array($field['field_name'] => $items);
+      return $adds;
+    }
+  } elseif ($op == 'view') { // custom override of the view function to eliminate the 'default' key if any
+    foreach ($node_field as $delta => $item) {
+      if (!is_array($node_field[$delta])) {
+        continue;
+      }
+      $node_field[$delta]['view'] = content_format($field, $item, $formatter, $node);
+    }
+    $value = theme('field', $node, $field, $node_field, $teaser, $page);
+    return $value;
+  }
+}
+
 /**
  * Implementation of hook_field_formatter().
  */
 function viewfield_field_formatter($field, $item, $formatter, $node) {
-  // these are Eaton's tests for his normal, defaults, content type wide settings stuff
-  //$v = ($field['configurability'] == 'none') ? $field['vname'] : $item['vname'];
-  //$a = ($field['configurability'] == 'none') ? $field['vargs'] : $item['vargs'];
-
+  
+  global $viewfield_stack;
+  if (count($viewfield_stack) > 2) { return; } // for safety sake, we can only display 2 levels of viewfields
+  
   // using the $v, $a convention in case I uncomment the above lines.
   $v = $item['vname'];
   $a = $item['vargs'];
@@ -111,12 +156,13 @@ function viewfield_field_formatter($field, $item, $formatter, $node) {
     // XXX this probably not multi-select safe...
     global $user;
     $view = views_get_view($v);
+    
     if (module_exists('token')) {
-      $translated_args = token_replace_multiple($a, array('node' => $node));
+      $a = token_replace_multiple($a, array('node' => $node));
 	  }
-    else {
-      $translated_args = strtr($a, array('%nid' => $node->nid, '%author' => $node->uid, '%viewer' => $user->uid));
-    }
+    
+    // for backwards compatibility, we scan for %nid, etc  
+    $translated_args = strtr($a, array('%nid' => $node->nid, '%author' => $node->uid, '%viewer' => $user->uid));
 
     $args = explode(',', $translated_args);
     if ($formatter != 'default' && $formatter != 'count') {
@@ -203,6 +249,9 @@ function viewfield_widget_settings($op, $widget) {
       return $form;
     case 'save':
       return array('force_default');
+    
+    case 'callbacks':
+      return array('default value' => CONTENT_CALLBACK_CUSTOM);
   }
 }
 
@@ -216,7 +265,11 @@ function viewfield_widget($op, &$node, $field, &$node_field) {
     case 'prepare form values':
       $node_field_transposed = content_transpose_array_rows_cols($node_field);
       $node_field['default vnames'] = $node_field_transposed['vname'];
-      
+
+      // get rid of weird ghosts of null values
+      if (isset($node_field['default vnames']) && array_key_exists(0, $node_field['default vnames']) && !isset($node_field['default vnames'][0])) {
+        unset($node_field['default vnames'][0]);
+      }
 
       break;
 
@@ -230,6 +283,16 @@ function viewfield_widget($op, &$node, $field, &$node_field) {
       $form = array();
 
       $form[$field['field_name']] = array('#tree' => TRUE);
+      
+      // provide our own overriding of defaults
+      if ($field['super_default']) {
+        $form[$field['field_name']]['override_default'] = array (
+          '#type' => 'checkbox',
+          '#title' => t('Override default'),
+          '#default_value' => !$node_field['default'],
+        );
+        
+      }
       
       // This form is used for both the default value field in the admin as well as the 
       // node edit form, so we have to make sure we show the default value field always.
@@ -313,23 +376,42 @@ function viewfield_widget($op, &$node, $field, &$node_field) {
       return $form;
 
     case 'process form values':
-      if ($field['multiple']) {
-        $items = $node_field['vnames'];
-        foreach($items as $item) {
-          $node_field[] = array (
-            'vname' => $item,
-            'vargs' => $node_field['vargs'],
+      if ($node_field['override_default']) {
+        if ($field['multiple']) {
+          $items = $node_field['vnames'];
+          if (is_array($items)) {
+            foreach($items as $item) {
+              $node_field[] = array (
+                'vname' => $item,
+                'vargs' => $node_field['vargs'],
+              );
+            }
+          }
+        }
+        else {
+          $node_field[0]['vname'] = $node_field['vnames'];
+          $node_field[0]['vargs'] = $node_field['vargs'];
+        }
+        
+        // Remove the widget's data representation so it isn't saved.
+        unset($node_field['vnames']);
+        unset($node_field['vargs']);
+        unset($node_field['override_default']);
+        unset($node_field['default']);
+      } else {
+        if ($field['multiple']) {
+          $node_field = array();
+        }
+        else {
+          $node_field = array(
+            0 => array (
+              'vname' => NULL,
+              'vargs' => NULL
+            ),
           );
+          
         }
       }
-      else {
-        $node_field[0]['vname'] = $node_field['vnames'];
-        $node_field[0]['vargs'] = $node_field['vargs'];
-      }
-      // Remove the widget's data representation so it isn't saved.
-      unset($node_field['vnames']);
-      unset($node_field['vargs']);
-      
   }
 }
 
@@ -385,16 +467,14 @@ function _viewfield_nodestack_pop() {
 }
 
 /** 
- * Implementation of hook_db_rewrite_sql
+ * Implementation of views_query_alter
  *
  * Prevent views from loading the node containing the view.
  */
-function viewfield_db_rewrite_sql($query, $primary_table, $primary_field, $args) {
+function viewfield_views_query_alter(&$query, &$view, $summary, $level) {
   global $viewfield_stack;
   if (!empty($viewfield_stack)) {
-    if ($primary_field == 'nid') {
-      $return['where'] = "$primary_table.nid NOT IN (" . implode(',', $viewfield_stack). ')';
-      return $return;
-    }
+    $query->add_where('node.nid NOT IN (' . implode(',', $viewfield_stack) . ')');
   }
 }
+
