@@ -120,7 +120,7 @@ function viewfield_field_formatter_info() {
 function viewfield_field($op, &$node, $field, &$node_field, $teaser, $page) {
  
   if ($op == 'load') {
-    if(!isset($node_field[0]['vname'])) {
+    if(!$node_field[0]['vname']) {
       // we're in default land here...
       $items = $field['super_default_widget'][0][$field['field_name']];
       viewfield_widget('process form values', $node, $field, $items);
@@ -282,17 +282,12 @@ function viewfield_widget($op, &$node, $field, &$node_field) {
     
       $form = array();
 
-      $form[$field['field_name']] = array('#tree' => TRUE);
+      $form[$field['field_name']] = array(
+        '#type' => 'fieldset',
+        '#title' => $field['widget']['label'], 
+        '#tree' => TRUE);
       
-      // provide our own overriding of defaults
-      if ($field['super_default']) {
-        $form[$field['field_name']]['override_default'] = array (
-          '#type' => 'checkbox',
-          '#title' => t('Override default'),
-          '#default_value' => !$node_field['default'],
-        );
-        
-      }
+
       
       // This form is used for both the default value field in the admin as well as the 
       // node edit form, so we have to make sure we show the default value field always.
@@ -319,7 +314,19 @@ function viewfield_widget($op, &$node, $field, &$node_field) {
           }
         }
         
+        // provide our own overriding of defaults
+        if ($field['super_default']) {
+          $form[$field['field_name']]['override_default'] = array (
+            '#type' => 'checkbox',
+            '#title' => t('Override default'),
+            '#default_value' => !($node_field['default'] || (arg(1) == 'add')),
+            // i hate using arg, but i couldn't find any other way to see if this node is being added.
+          );
+
+        }
+        
         if (count($options) > 1) {
+
           $form[$field['field_name']]['vnames'] = array(
             '#type' => 'select',
             '#title' => t($field['widget']['label']),
@@ -354,25 +361,28 @@ function viewfield_widget($op, &$node, $field, &$node_field) {
           );
           
         }
+        
+        // TODO: token support right now a bit hacked on ... needs better integration
+        // ev. checkbox to enable/disable use of token-module here
+    	  if (module_exists('token')) {
+      		$form[$field['field_name']]['vargs']['#description'] .= '<br/>'.
+      		  t('Use the syntax [token] if you want to insert a replacement pattern.');
+              $form[$field['field_name']]['token_help'] = array(
+                '#title' => t('Replacement patterns'),
+                '#type' => 'fieldset',
+                '#collapsible' => TRUE,
+                '#collapsed' => TRUE,
+              );
+            $form[$field['field_name']]['token_help']['help'] = array(
+              '#value' => theme('token_help', 'node'),
+            );
+      	} else {
+      	   $form[$field['field_name']]['vargs']['#description'] .= '<br/>' . t('You may use %nid for the node id of the current node. %author for the node author and %viewer for user viewing the node.'); 
+      	}
+      	
       }
 
-      // TODO: token support right now a bit hacked on ... needs better integration
-      // ev. checkbox to enable/disable use of token-module here
-  	  if (module_exists('token')) {
-    		$form[$field['field_name']]['vargs']['#description'] .= '<br/>'.
-    		  t('Use the syntax [token] if you want to insert a replacement pattern.');
-            $form[$field['field_name']]['token_help'] = array(
-              '#title' => t('Replacement patterns'),
-              '#type' => 'fieldset',
-              '#collapsible' => TRUE,
-              '#collapsed' => TRUE,
-            );
-          $form[$field['field_name']]['token_help']['help'] = array(
-            '#value' => theme('token_help', 'node'),
-          );
-    	} else {
-    	   $form[$field['field_name']]['vargs']['#description'] .= '<br/>' . t('You may use %nid for the node id of the current node. %author for the node author and %viewer for user viewing the node.'); 
-    	}
+
       return $form;
 
     case 'process form values':
