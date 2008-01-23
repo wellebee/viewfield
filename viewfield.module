@@ -124,7 +124,7 @@ function viewfield_field($op, &$node, $field, &$node_field, $teaser, $page) {
       // we're in default land here...
       $items = $field['super_default_widget'][0][$field['field_name']];
       viewfield_widget('process form values', $node, $field, $items);
-      $items['default'] = true;
+      $items[0]['default'] = true;
       $adds = array($field['field_name'] => $items);
       return $adds;
     }
@@ -319,7 +319,7 @@ function viewfield_widget($op, &$node, $field, &$node_field) {
           $form[$field['field_name']]['override_default'] = array (
             '#type' => 'checkbox',
             '#title' => t('Override default'),
-            '#default_value' => !($node_field['default'] || (arg(1) == 'add')),
+            '#default_value' => !($node_field[0]['default'] || (arg(1) == 'add')),
             // i hate using arg, but i couldn't find any other way to see if this node is being added.
           );
 
@@ -386,6 +386,7 @@ function viewfield_widget($op, &$node, $field, &$node_field) {
       return $form;
 
     case 'process form values':
+
       if ($node_field['override_default']) {
         if ($field['multiple']) {
           $items = $node_field['vnames'];
