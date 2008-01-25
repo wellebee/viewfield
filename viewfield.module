@@ -243,7 +243,7 @@ function viewfield_widget_settings($op, $widget) {
       $form['force_default'] = array(
         '#type' => 'checkbox',
         '#title' => t('Force default'),
-        '#default_value' => $field['force_default'],
+        '#default_value' => $widget['force_default'],
         '#description' => t('If checked, the user will not be able to change anything about the view at all.  It will not even be shown on the edit node page.  The default value will be used instead.'),
       );
       return $form;
