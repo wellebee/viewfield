@@ -133,6 +133,11 @@ function viewfield_field($op, &$node, $field, &$node_field, $teaser, $page) {
       if (!is_array($node_field[$delta])) {
         continue;
       }
+      
+      // from _content_field_view()
+      $context = $teaser ? 'teaser' : 'full';
+      $formatter = isset($field['display_settings'][$context]['format']) ? $field['display_settings'][$context]['format'] : 'default';
+      
       $node_field[$delta]['view'] = content_format($field, $item, $formatter, $node);
     }
     $value = theme('field', $node, $field, $node_field, $teaser, $page);
