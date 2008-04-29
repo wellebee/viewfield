@@ -286,18 +286,20 @@ function viewfield_widget($op, &$node, $field, &$node_field) {
       }
     
       $form = array();
-
+      
+      // Create the field set for the view field, showing it depending on
+      // whether or not force default is selected.
       $form[$field['field_name']] = array(
         '#type' => 'fieldset',
         '#title' => $field['widget']['label'], 
-        '#tree' => TRUE);
-      
+        '#tree' => TRUE,
+        '#access' => !$field['widget']['force_default'] || !isset($node->uid),
+      );
 
-      
-      // This form is used for both the default value field in the admin as well as the 
-      // node edit form, so we have to make sure we show the default value field always.
-      // It just wouldn't do to force the default value and make the default value unconfigurable, now would it?
-      if ($field['widget']['force_default'] && isset($node->uid) && !user_access('administer nodes')) {
+      // This form is used for both the default value field in the admin as
+      // well as the node edit form, so we have to make sure we show the default
+      // value field always.
+      if ($field['widget']['force_default'] && isset($node->uid)) {
         $form[$field['field_name']]['vnames'] = array(
           '#type' => 'value',
           '#value' => $field['widget']['default_value'][0]['vname'],
