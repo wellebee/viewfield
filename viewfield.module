@@ -170,6 +170,20 @@ function viewfield_field_formatter($field, $item, $formatter, $node) {
     $translated_args = strtr($a, array('%nid' => $node->nid, '%author' => $node->uid, '%viewer' => $user->uid));
 
     $args = explode(',', $translated_args);
+
+    // token_replace_multiple() will be calling this function. Remove untranslated tokens.
+    static $tokens = TRUE;
+    if ($tokens) {
+      $tokens = FALSE;
+      foreach ($args as $arg => $value) {
+        foreach (token_get_list('node') as $module) {
+          if (in_array($value, token_prepare_tokens(array_keys($module)))) {
+            unset($args[$arg]);
+          }
+        }
+      }
+    }
+
     if ($formatter != 'default' && $formatter != 'count') {
       $view->page_type = $formatter;
     }
