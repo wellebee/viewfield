@@ -171,9 +171,9 @@ function viewfield_field_formatter($field, $item, $formatter, $node) {
 
     $args = explode(',', $translated_args);
 
-    // token_replace_multiple() will be calling this function. Remove untranslated tokens.
+    // token_replace_multiple() will be calling this function a second time before it completes the first time. Remove untranslated tokens.
     static $tokens = TRUE;
-    if ($tokens) {
+    if ($tokens && module_exists('token')) {
       $tokens = FALSE;
       foreach ($args as $arg => $value) {
         foreach (token_get_list('node') as $module) {
