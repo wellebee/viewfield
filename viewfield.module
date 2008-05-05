@@ -122,78 +122,99 @@ function viewfield_field($op, &$node, $field, &$node_field, $teaser, $page) {
  * Implementation of hook_field_formatter().
  */
 function viewfield_field_formatter($field, $item, $formatter, $node) {
-  global $_viewfield_stack;
-  // For safety's sake, we can only display 2 levels of viewfields.
-  if (count($_viewfield_stack) <= 2) {
-    $v = $item['vname'];
-    $a = $item['vargs'];
-    if (!empty($v)) {
-      // XXX This is probably not multi-select safe.
-      global $user;
-      $view = views_get_view($v);
-      if (module_exists('token')) {
-        $a = token_replace_multiple($a, array('node' => $node));
-      }
-      // For backwards compatibility, we scan for %nid, etc.
-      $translated_args = strtr($a, array('%nid' => $node->nid, '%author' => $node->uid, '%viewer' => $user->uid));
-      $args = explode(',', $translated_args);
-      // token_replace_multiple() will be calling this function a second time before
-      // it completes the first time. Remove untranslated tokens.
-      static $tokens = TRUE;
-      if ($tokens && module_exists('token')) {
-        $tokens = FALSE;
-        foreach ($args as $arg => $value) {
-          foreach (token_get_list('node') as $module) {
-            if (in_array($value, token_prepare_tokens(array_keys($module)))) {
-              unset($args[$arg]);
+  // Prevent token_replace_multiple() from running this function a second time
+  // before it completes the first time.
+  static $tokens = TRUE;
+  if ($tokens) {
+    global $_viewfield_stack;
+    // For safety's sake, we can only display 2 levels of viewfields.
+    if (count($_viewfield_stack) <= 2) {
+      if (!empty($item['vname'])) {
+        // XXX: This is probably not multi-select safe.
+        $view = views_get_view($item['vname']);
+        if (!empty($item['vargs'])) {
+          $pos = 0;
+          $args = array();
+          while ($pos < strlen($item['vargs'])) {
+            $found = FALSE;
+            // If string starts with a quote, start after quote and get everything before next quote.
+            if (strpos($item['vargs'], '"', $pos) === $pos) {
+              if (($quote = strpos($item['vargs'], '"', ++$pos)) !== FALSE) {
+                // Skip pairs of quotes.
+                while (!(($ql = strspn($item['vargs'], '"', $quote)) & 1)) {
+                  $quote = strpos($item['vargs'], '"', $quote + $ql);
+                }
+                $args[] = str_replace('""', '"', substr($item['vargs'], $pos, $quote + $ql - $pos - 1));
+                $pos = $quote + $ql + 1;
+                $found = TRUE;
+              }
+            }
+            elseif (($comma = strpos($item['vargs'], ',', $pos)) !== FALSE) {
+              // Otherwise, get everything before next comma.
+              $args[] = substr($item['vargs'], $pos, $comma - $pos);
+              // Skip to after comma and repeat
+              $pos = $comma + 1;
+              $found = TRUE;
+            }
+            if (!$found) {
+              $args[] = substr($item['vargs'], $pos);
+              $pos = strlen($item['vargs']);
             }
           }
+          if (module_exists('token')) {
+            $tokens = FALSE;
+            $args = token_replace_multiple($args, array('node' => $node));
+            $tokens = TRUE;
+          }
+          // For backwards compatibility, we scan for %nid, etc.
+          global $user;
+          foreach ($args as $key => $a) {
+            $args[$key] = strtr($a, array('%nid' => $node->nid, '%author' => $node->uid, '%viewer' => $user->uid));
+          }
         }
-      }
-      if ($formatter != 'default' && $formatter != 'count') {
-        $view->page_type = $formatter;
-      }
-      // Need to prevent recursive views and node building, but don't need to do it on
-      // new node previews.
-      if ($node->nid) {
-        _viewfield_nodestack_push($node->nid);
-      }
-      if (($formatter == 'block' && $view->block_use_pager) || ($view->use_pager && $formatter != 'block')) {
-        // Fix for multiple pagers
-        global $pager_total;
-        static $viewfield_pager_elements = array();
-        $key = $node->nid .'-'. $field['field_name'] .'-'. $view->name; // Set a unique key for the view in the current node.
-        if (!isset($viewfield_pager_elements[$key])) {
-          // Set the viewfield pager element to the max + 1
-          $max1 = is_array($pager_total) ? @max(array_values($pager_total)) : 1;
-          $av = array_values($viewfield_pager_elements);
-          $max2 = $av ? max($av) : 0;
-          $viewfield_pager_elements[$key] = @max($max1, $max2) + 1;
+        if ($formatter != 'default' && $formatter != 'count') {
+          $view->page_type = $formatter;
         }
-        $use_pager = $viewfield_pager_elements[$key];
+        // Need to prevent recursive views and node building, but don't need to do it on
+        // new node previews.
+        if ($node->nid) {
+          _viewfield_nodestack_push($node->nid);
+        }
+        if (($formatter == 'block' && $view->block_use_pager) || ($view->use_pager && $formatter != 'block')) {
+          // Fix for multiple pagers
+          global $pager_total;
+          static $viewfield_pager_elements = array();
+          $key = $node->nid .'-'. $field['field_name'] .'-'. $view->name; // Set a unique key for the view in the current node.
+          if (!isset($viewfield_pager_elements[$key])) {
+            // Set the viewfield pager element to the max + 1
+            $max1 = is_array($pager_total) ? @max(array_values($pager_total)) : 1;
+            $av = array_values($viewfield_pager_elements);
+            $max2 = $av ? max($av) : 0;
+            $viewfield_pager_elements[$key] = @max($max1, $max2) + 1;
+          }
+          $use_pager = $viewfield_pager_elements[$key];
+        }
+        else {
+          $use_pager = FALSE;
+        }
+        switch ($formatter) {
+          default:
+            $output = views_build_view('embed', $view, $args, $use_pager, $view->nodes_per_page);
+            break;
+          case 'block':
+            $output = views_build_view('block', $view, $args, $use_pager, $view->nodes_per_block);
+            break;
+          case 'count':
+            $queries = views_build_view('queries', $view, $args);
+            $output = db_result(db_query($queries['countquery']));
+            break;
+        }
+        // This node is "safe" again.
+        if ($node->nid) {
+          _viewfield_nodestack_pop();
+        }
+        return $output;
       }
-      else {
-        $use_pager = FALSE;
-      }
-      switch ($formatter) {
-        default:
-          $output = views_build_view('embed', $view, $args, $use_pager, $view->nodes_per_page);
-          break;
-        case 'block':
-          $output = views_build_view('block', $view, $args, $use_pager, $view->nodes_per_block);
-          break;
-        case 'count':
-          // TODO: Use the the new 'queries' $op instead.
-          $results = views_build_view('items', $view, $args);
-          $count = count($results['items']);
-          $output = $count;
-          break;
-      }
-      // This node is "safe" again.
-      if ($node->nid) {
-        _viewfield_nodestack_pop();
-      }
-      return $output;
     }
   }
 }
@@ -306,7 +327,7 @@ function viewfield_widget($op, &$node, $field, &$node_field) {
             '#title' => t('Arguments'),
             '#default_value' => $node_field[0]['vargs'], // All views share args (for now).
             '#required' => false,
-            '#description' => t('Provide a comma separated list of arguments to pass to the view. These arguments will be passed to EACH selected view.'),
+            '#description' => t('Provide a comma separated list of arguments to pass to the view. These arguments will be passed to EACH selected view. If an argument contains commas or double quotes, enclose it in double quotes. Replace double quotes that are part of the argument with pairs of double quotes.'),
           );
         }
         else {
