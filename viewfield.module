@@ -10,7 +10,7 @@
  * Implementation of hook_field_info().
  */
 function viewfield_field_info() {
-  return array('viewfield' => array('label' => 'View Reference'));
+  return array('viewfield' => array('label' => 'View field'));
 }
 
 /**
@@ -266,8 +266,8 @@ function viewfield_widget($op, &$node, $field, &$node_field) {
       }
       break;
     case 'form':
-      // For the administration page, the allowed views might not be set yet.
-      if (!isset($field['allowed_views'])) {
+      // If no allowed views are selected, allow all views.
+      if (!isset($field['allowed_views']) || count(array_flip($field['allowed_views'])) == 1) {
         $field['allowed_views'] = _viewfield_potential_references(array());
       }
       $form = array();
@@ -298,7 +298,7 @@ function viewfield_widget($op, &$node, $field, &$node_field) {
         $allowed_views = array_flip($field['allowed_views']);
         unset($allowed_views[0]);
         foreach ($options as $key => $value) {
-          if (! (0 === $key || in_array($key, $allowed_views))) {
+          if (!(0 === $key || in_array($key, $allowed_views))) {
             unset($options[$key]);
           }
         }
@@ -366,7 +366,7 @@ function viewfield_widget($op, &$node, $field, &$node_field) {
       }
       return $form;
     case 'process form values':
-      if ($node_field['override_default']) {
+      if (!$field['super_default'] || $node_field['override_default']) {
         if ($field['multiple']) {
           $items = $node_field['vnames'];
           if (is_array($items)) {
