@@ -315,7 +315,7 @@ function viewfield_widget($op, &$node, $field, &$node_field) {
         if (count($options) > 1) {
           $form[$field['field_name']]['vnames'] = array(
             '#type' => 'select',
-            '#title' => t($field['widget']['label']),
+            '#title' => $field['widget']['label'],
             '#default_value' => $node_field['default vnames'],
             '#multiple' => $field['multiple'],
             '#options' => $options,
@@ -336,11 +336,11 @@ function viewfield_widget($op, &$node, $field, &$node_field) {
           $form[$field['field_name']]['vnames'] = array(
             '#type' => 'value',
             '#value' => $key,
-            '#title' => t($value),
+            '#title' => $value,
           );
           $form[$field['field_name']]['vargs'] = array(
             '#type' => 'textfield',
-            '#title' => t($field['widget']['label']) .' ('. t($label) .') '. t('arguments'),
+            '#title' => $field['widget']['label'] ." ($label) ". t('arguments'),
             '#default_value' => $node_field[0]['vargs'], // All views share args (for now).
             '#required' => false,
             '#description' => t('Provide a comma separated list of arguments to pass to the view. These arguments will be passed to EACH selected view. If an argument contains commas or double quotes, enclose it in double quotes. Replace double quotes that are part of the argument with pairs of double quotes.'),
