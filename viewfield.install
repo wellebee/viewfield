@@ -1,0 +1,44 @@
+<?php
+// $Id$
+
+/**
+ * Implementation of hook_install().
+ */
+function viewfield_install() {
+  drupal_load('module', 'content');
+  content_notify('install', 'viewfield');
+}
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function viewfield_uninstall() {
+  drupal_load('module', 'content');
+  content_notify('uninstall', 'viewfield');
+}
+
+/**
+ * Implementation of hook_enable().
+ *
+ * Notify content module when this module is enabled.
+ */
+function viewfield_enable() {
+  drupal_load('module', 'content');
+  content_notify('enable', 'viewfield');
+}
+
+/**
+ * Implementation of hook_disable().
+ *
+ * Notify content module when this module is disabled.
+ */
+function viewfield_disable() {
+  drupal_load('module', 'content');
+  content_notify('disable', 'viewfield');
+}
+
+
+//function viewfield_update_6000() {
+//  $ret = array();
+//  return $ret;
+//}
