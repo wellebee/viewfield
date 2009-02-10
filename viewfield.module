@@ -167,7 +167,6 @@ function viewfield_content_is_empty($item, $field) {
  */
 function viewfield_field_formatter_info() {
   $formatters = array();
-
   $displays = views_fetch_plugin_data('display');
   foreach ($displays as $type => $details) {
     $formatters[$type] = array(
@@ -187,10 +186,15 @@ function theme_viewfield_formatter($element) {
   _viewfield_load_view_info($element);
   
   $node = $element['#node'];
-  $display = $element['#formatter'];
-  $view_name = $element['#item']['vname'];
+  if ($view_info = explode('|', $element['#item']['vname'])) {
+    $view_name = $view_info[0];  
+    $display = $view_info[1];
+  }
+  else {
+    $view_name = $element['#item']['vname'];
+    $display = $element['#item']['display'];
+  }
   $view_args = $element['#item']['actual_vargs'];
-  
   return _viewfield_get_view_content($view_name, $view_args, $display, $node);
 }
  
@@ -392,8 +396,11 @@ function _viewfield_potential_references($field_settings = TRUE, $field = array(
   $options = array();
   
   foreach (views_get_all_views() as $view_name => $view_info) {
+    $view = views_get_view($view_name);
     if (isset($field['allowed_views'][$view_name]) && $field['allowed_views'][$view_name]) {
-      $options[$view_name] = $view_name;
+      foreach ($view->display as $display) {
+        $options[$view->name .'|'. $display->id] = $view->name .' - '. $display->display_title;
+      }
     }
     else {
       $field['allowed_views'][$view_name] = $view_name;
@@ -402,7 +409,12 @@ function _viewfield_potential_references($field_settings = TRUE, $field = array(
   
   // If no allowed views are selected, allow all views.
   if (empty($options)) {
-    $options = $field['allowed_views'];
+    foreach (views_get_all_views() as $view_name => $view_info) {
+      $view = views_get_view($view_name);
+      foreach ($view->display as $display) {
+        $options[$view->name .'|'. $display->id] = $view->name .' - '. $display->display_title;
+      }
+    }
   }
   
   // Add a null option for non-required or multiple fields: handle multiple views
@@ -479,7 +491,6 @@ function _viewfield_get_token_help() {
 function _viewfield_get_view_content($view_name, $view_args, $display, $node) {
   global $_viewfield_stack;
   $output = '';
-  
   // For safety's sake, we can only display 2 levels of viewfields.
   if (!empty($view_name) && count($_viewfield_stack) <= 2) {
     // Need to prevent recursive views and node building, but don't need to do it on
@@ -490,7 +501,10 @@ function _viewfield_get_view_content($view_name, $view_args, $display, $node) {
     
     $view = views_get_view($view_name);
     if (!empty($view)) {
-      $output .= $view->execute_display($display, $view_args);
+      $view->set_display($display);
+      $view->set_arguments($view_args);
+      $view->execute_display();
+      $output .= $view->render();
     }
     
     // This node is "safe" again.
