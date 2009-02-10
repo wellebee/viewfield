@@ -169,8 +169,9 @@ function viewfield_field_formatter_info() {
   $formatters = array();
   $displays = views_fetch_plugin_data('display');
   foreach ($displays as $type => $details) {
+    $title = isset($details['title']) ? $details['title'] : $type;
     $formatters[$type] = array(
-      'label' => $details['title'],
+      'label' => $title,
       'field types' => array('viewfield')
     );
   }
@@ -253,9 +254,10 @@ function viewfield_widget_settings($op, $widget) {
  * Implementation of hook_widget().
  */
 function viewfield_widget(&$form, &$form_state, $field, $items, $delta = 0) {
-  // since tabledrag.js currently cannot handle nested tables, if we are adding/editing
-  // a node we have to show the token help just below the viewfield select widget
-  if ($delta == 0 && $form['#node']->uid && $field['multiple'] &&
+  // since tabledrag.js currently cannot handle nested tables, 
+  // if we are adding/editing a node we have to show the token 
+  // help just below the viewfield select widget
+  if ($delta == 0 && $field['multiple'] &&
     !$field['widget']['force_default'] && _viewfield_token_enabled($field)) {
     $form['token_help'] = _viewfield_get_token_help();
     $form['token_help']['#weight'] = $field['widget']['weight'] + 1;
@@ -268,7 +270,6 @@ function viewfield_widget(&$form, &$form_state, $field, $items, $delta = 0) {
 }
 
 function viewfield_select_process($element, $edit, $form_state, $form) {
-  
   $field_name = $element['#field_name'];
   $field = $form['#field_info'][$field_name];
   $field_key_vname = $element['#columns'][0];
@@ -456,7 +457,7 @@ function _viewfield_nodestack_pop() {
 function _viewfield_get_super_defaults($field) {
   return $field['super_default'] ?
     $field['super_default_widget'][0]['fieldset']:
-    array($field_key_vname => 0, $field_key_vargs => '');  
+    array('vname' => NULL, 'vargs' => NULL);  
 }
 
 /**
