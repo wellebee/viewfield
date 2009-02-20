@@ -17,7 +17,7 @@ function viewfield_theme() {
       'arguments' => array('element' => NULL),
     )
   );
-  
+
   $displays = views_fetch_plugin_data('display');
   foreach ($displays as $type => $details) {
     $theme_info['viewfield_formatter_'. $type] = array(
@@ -25,7 +25,7 @@ function viewfield_theme() {
       'function' => 'theme_viewfield_formatter'
     );
   }
-  
+
   return $theme_info;
 }
 
@@ -59,7 +59,7 @@ function viewfield_field_settings($op, $field) {
       foreach ($all_views as $view) {
         $view_options[$view->name] = $view->name;
       }
-      
+
       $form['allowed_views'] = array(
         '#type' => 'checkboxes',
         '#title' => t('Allowed views'),
@@ -73,7 +73,7 @@ function viewfield_field_settings($op, $field) {
         '#title' => t('Use a common default value for all nodes if the user does not override it on the node form.'),
         '#default_value' => $field['super_default'],
       );
-      
+
       if (module_exists('token')) {
         $form['token_enabled'] = array(
           '#type' => 'checkbox',
@@ -82,23 +82,23 @@ function viewfield_field_settings($op, $field) {
           '#default_value' => $field['token_enabled'],
         );
       }
-      
+
       $form_state = NULL;
       $form['super_default_widget'] = array('#tree' => TRUE);
       $field_form = content_field_form($form, $form_state, $field);
       $form['super_default_widget'][0] = &$field_form[$field['field_name']][0];
-      
+
       return $form;
-      
+
     case 'validate':
       if ($field['force_default'] && $field['multiple']) {
         form_set_error('multiple', t('Currently multiple views are not supported if force default is enabled'));
       }
       break;
-      
+
     case 'save':
       return array('allowed_views', 'super_default', 'token_enabled', 'super_default_widget');
-      
+
     case 'database columns':
       $columns = array(
         'vname' => array('type' => 'varchar', 'not null' => FALSE, 'length' => 32),
@@ -117,17 +117,17 @@ function viewfield_field($op, &$node, $field, &$items, $teaser, $page) {
   $columns = array_keys($field['columns']);
   $field_key_vname = $columns[0];
   $field_key_vargs = $columns[1];
-  
+
   // validate presave update
   switch ($op) {
     case 'presave':
       $super_defaults = array($field_key_vname => VIEWFIELD_DEFAULT_VNAME, $field_key_vargs => NULL);
-      
+
       // get items out of fieldset
       foreach ($items as $delta => $item) {
         if (!empty($item['fieldset']) &&
           // the view name may be empty if we are not ovverriding the default values
-          (!empty($item['fieldset'][$field_key_vname]) || 
+          (!empty($item['fieldset'][$field_key_vname]) ||
           (isset($item['fieldset']['override_default']) && !$item['fieldset']['override_default']))) {
           $items[$delta] = $field['super_default'] && !$item['fieldset']['override_default'] ? $super_defaults : $item['fieldset'];
         }
@@ -137,7 +137,7 @@ function viewfield_field($op, &$node, $field, &$items, $teaser, $page) {
         }
       }
       break;
-      
+
     case 'load':
       $adds = array();
       foreach ($items as $delta => $item) {
@@ -175,7 +175,7 @@ function viewfield_field_formatter_info() {
       'field types' => array('viewfield')
     );
   }
-  
+
   return $formatters;
 }
 
@@ -183,12 +183,12 @@ function viewfield_field_formatter_info() {
  * Theme function
  */
 function theme_viewfield_formatter($element) {
-  
+
   _viewfield_load_view_info($element);
-  
+
   $node = $element['#node'];
   if ($view_info = explode('|', $element['#item']['vname'])) {
-    $view_name = $view_info[0];  
+    $view_name = $view_info[0];
     $display = $view_info[1];
   }
   else {
@@ -198,7 +198,7 @@ function theme_viewfield_formatter($element) {
   $view_args = $element['#item']['actual_vargs'];
   return _viewfield_get_view_content($view_name, $view_args, $display, $node);
 }
- 
+
 
 /**
  * Implementation of hook_widget_info().
@@ -254,8 +254,8 @@ function viewfield_widget_settings($op, $widget) {
  * Implementation of hook_widget().
  */
 function viewfield_widget(&$form, &$form_state, $field, $items, $delta = 0) {
-  // since tabledrag.js currently cannot handle nested tables, 
-  // if we are adding/editing a node we have to show the token 
+  // since tabledrag.js currently cannot handle nested tables,
+  // if we are adding/editing a node we have to show the token
   // help just below the viewfield select widget
   if ($delta == 0 && $field['multiple'] &&
     !$field['widget']['force_default'] && _viewfield_token_enabled($field)) {
@@ -276,11 +276,11 @@ function viewfield_select_process($element, $edit, $form_state, $form) {
   $field_key_vargs = $element['#columns'][1];
   $element['#field_info'] = &$form['#field_info'];
   $node = $form['#node'];
-  
+
   // if the super default is enabled populate the field form accordingly
   $super_defaults = _viewfield_get_super_defaults($form['#field_info'][$field_name]);
   $field_settings = !isset($node->uid);
-      
+
   $element['fieldset'] = array(
     // The following values were set by the content module and need
     // to be passed down to the nested element.
@@ -292,7 +292,7 @@ function viewfield_select_process($element, $edit, $form_state, $form) {
     '#delta' => $element['#delta'],
     '#columns' => $element['#columns'],
   );
-      
+
   // This form is used for both the default value field in the admin as well as
   // the node edit form, so we have to make sure we show the default value field
   // always.
@@ -309,7 +309,7 @@ function viewfield_select_process($element, $edit, $form_state, $form) {
   else {
     // Display the form to let the user pick a view.
     $options = _viewfield_potential_references($field_settings, $field, $element['#delta']);
-    
+
     // Provide our own overriding of defaults.
     if ($field['super_default'] && isset($node->uid)) {
       $element['fieldset']['override_default'] = array(
@@ -319,9 +319,9 @@ function viewfield_select_process($element, $edit, $form_state, $form) {
         '#default_value' => empty($node->title) || !$element['#value']['default']
       );
     }
-    
+
     $element['fieldset']['#type'] = 'fieldset';
-    
+
     if (count($options) > 1) {
       $element['fieldset'][$field_key_vname] = array(
         '#type' => 'select',
@@ -343,22 +343,22 @@ function viewfield_select_process($element, $edit, $form_state, $form) {
       );
       $args_title = $field['widget']['label'] ." ($label) ". t('arguments');
     }
-    
+
     $element['fieldset'][$field_key_vargs] = array(
       '#type' => 'textfield',
       '#title' => $args_title,
-      '#default_value' => isset($element['#value'][$field_key_vargs]) ? $element['#value'][$field_key_vargs] : 
+      '#default_value' => isset($element['#value'][$field_key_vargs]) ? $element['#value'][$field_key_vargs] :
         // apply the default in the field settings form
         ($field_settings ? $super_defaults[$field_key_vargs] : ''),
       '#required' => FALSE,
       '#description' => t('Provide a comma separated list of arguments to pass to the view. These arguments will be passed to EACH selected view. If an argument contains commas or double quotes, enclose it in double quotes. Replace double quotes that are part of the argument with pairs of double quotes.'),
     );
-    
+
     $token_desc = ($token_enabled = _viewfield_token_enabled($field)) ?
       'Use the syntax [token] if you want to insert a replacement pattern.':
       'You may use %nid for the node id of the current node. %author for the node author and %viewer for user viewing the node.';
     $element['fieldset'][$field_key_vargs]['#description'] .= '<br/> '. t($token_desc);
-    
+
     // since tabledrag.js currently cannot handle nested tables we show the token help
     // inside the fieldset only in the field settings form or in single-value mode
     if ($token_enabled && ($field_settings || !$field['multiple'])) {
@@ -384,7 +384,7 @@ function theme_viewfield_select($element) {
  */
 function viewfield_views_query_alter(&$view, &$query) {
   global $_viewfield_stack;
-  if (!empty($_viewfield_stack)) {
+  if ((!empty($_viewfield_stack)) && (in_array('node', $query->table_queue))) {
     $placeholders = array_fill(0, count($_viewfield_stack), '%d');
     $query->add_where(0, 'node.nid NOT IN ('. implode(',', $placeholders) .')', $_viewfield_stack);
   }
@@ -395,7 +395,7 @@ function viewfield_views_query_alter(&$view, &$query) {
  */
 function _viewfield_potential_references($field_settings = TRUE, $field = array(), $delta = 0) {
   $options = array();
-  
+
   foreach (views_get_all_views() as $view_name => $view_info) {
     $view = views_get_view($view_name);
     if (isset($field['allowed_views'][$view_name]) && $field['allowed_views'][$view_name]) {
@@ -407,7 +407,7 @@ function _viewfield_potential_references($field_settings = TRUE, $field = array(
       $field['allowed_views'][$view_name] = $view_name;
     }
   }
-  
+
   // If no allowed views are selected, allow all views.
   if (empty($options)) {
     foreach (views_get_all_views() as $view_name => $view_info) {
@@ -417,14 +417,14 @@ function _viewfield_potential_references($field_settings = TRUE, $field = array(
       }
     }
   }
-  
+
   // Add a null option for non-required or multiple fields: handle multiple views
   // by adding an empty option, otherwise at each submit the user would add a new view.
   // If the field is required AND multiple the first widget has no empty choice.
   if (!$field_settings && (!$field['required'] || ($field['multiple'] && $delta > 0))) {
     array_unshift($options, '<'. t('none') .'>');
   }
-  
+
   return $options;
 }
 
@@ -457,7 +457,7 @@ function _viewfield_nodestack_pop() {
 function _viewfield_get_super_defaults($field) {
   return $field['super_default'] ?
     $field['super_default_widget'][0]['fieldset']:
-    array('vname' => NULL, 'vargs' => NULL);  
+    array('vname' => NULL, 'vargs' => NULL);
 }
 
 /**
@@ -499,7 +499,7 @@ function _viewfield_get_view_content($view_name, $view_args, $display, $node) {
     if ($node->nid) {
       _viewfield_nodestack_push($node->nid);
     }
-    
+
     $view = views_get_view($view_name);
     if (!empty($view)) {
       $view->set_display($display);
@@ -507,13 +507,13 @@ function _viewfield_get_view_content($view_name, $view_args, $display, $node) {
       $view->execute_display();
       $output .= $view->render();
     }
-    
+
     // This node is "safe" again.
     if ($node->nid) {
       _viewfield_nodestack_pop();
     }
   }
-  
+
   return $output;
 }
 
@@ -522,7 +522,7 @@ function _viewfield_get_view_content($view_name, $view_args, $display, $node) {
  */
 function _viewfield_get_view_args($field, $vargs, $node) {
   $args = array();
-  
+
   // Prevent token_replace() from running this function a second time
   // before it completes the first time.
   static $tokens = TRUE;
@@ -572,7 +572,7 @@ function _viewfield_get_view_args($field, $vargs, $node) {
       $args[$key] = strtr($a, array('%nid' => $node->nid, '%author' => $node->uid, '%viewer' => $user->uid));
     }
   }
-  
+
   return $args;
 }
 
@@ -580,26 +580,26 @@ function _viewfield_get_view_args($field, $vargs, $node) {
  * Load the view field data into the given $element if missing
  */
 function _viewfield_load_view_info(&$element) {
-	
+
   // check if the node has been loaded
   if (!isset($element['#item']['actual_vargs'])) {
     static $fields;
     $param_key = $element['#type_name'] .'-'. $element['#field_name'];
-    
+
     // load field info
     if (!isset($fields[$param_key])) {
       module_load_include('inc', 'content', 'includes/content.crud');
       $param = array('type_name' => $element['#type_name'], 'field_name' => $element['#field_name']);
       $fields[$param_key] = content_field_instance_read($param);
     }
-    
+
     $field = $fields[$param_key][0];
-    
+
     if ($element['#item']['vname'] == VIEWFIELD_DEFAULT_VNAME) {
       // we are in the default land here
       $element['#item'] = _viewfield_get_super_defaults($field);
     }
-    
+
     $element['#item']['actual_vargs'] = _viewfield_get_view_args($field, $element['#item']['vargs'], $element['#node']);
   }
 }
