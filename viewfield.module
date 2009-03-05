@@ -85,6 +85,7 @@ function viewfield_field_settings($op, $field) {
 
       $form_state = NULL;
       $form['super_default_widget'] = array('#tree' => TRUE);
+      $form['#node'] = (object) array('type' => $field['type_name']);
       $field_form = content_field_form($form, $form_state, $field);
       $form['super_default_widget'][0] = &$field_form[$field['field_name']][0];
 
@@ -275,7 +276,7 @@ function viewfield_select_process($element, $edit, $form_state, $form) {
   $field_key_vname = $element['#columns'][0];
   $field_key_vargs = $element['#columns'][1];
   $element['#field_info'] = &$form['#field_info'];
-  $node = $form['#node'];
+  $node = isset($form['#node']) ? $form['#node'] : (object) array('type' => $field['type_name']);
 
   // if the super default is enabled populate the field form accordingly
   $super_defaults = _viewfield_get_super_defaults($form['#field_info'][$field_name]);
