@@ -142,8 +142,8 @@ function viewfield_field($op, &$node, $field, &$items, $teaser, $page) {
     case 'load':
       $adds = array();
       foreach ($items as $delta => $item) {
-        if ($node->{$field_name}[$delta][$field_key_vname] == VIEWFIELD_DEFAULT_VNAME) {
-          // We're in default land here: if the super default is enabled load the defaults accordingly
+        if ($node->{$field_name}[$delta][$field_key_vname] == VIEWFIELD_DEFAULT_VNAME || $field['super_default']) {
+          // If the field has been set as default or super default is enabled, load the defaults accordingly.
           $items[$delta] = _viewfield_get_super_defaults($field);
           $items[$delta]['default'] = TRUE;
         }
