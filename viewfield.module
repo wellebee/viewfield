@@ -147,8 +147,7 @@ function viewfield_field($op, &$node, $field, &$items, $teaser, $page) {
           $items[$delta] = _viewfield_get_super_defaults($field);
           $items[$delta]['default'] = TRUE;
         }
-        // load here the actual arguments to avoid the body disappearing
-        $items[$delta]['actual_vargs'] = _viewfield_get_view_args($field, $items[$delta][$field_key_vargs], $node);
+        $items[$delta]['token_enabled'] = _viewfield_token_enabled($field);
         $adds[$field_name][$delta] = $items[$delta];
       }
       return $adds;
@@ -196,7 +195,7 @@ function theme_viewfield_formatter($element) {
     $view_name = $element['#item']['vname'];
     $display = $element['#item']['display'];
   }
-  $view_args = $element['#item']['actual_vargs'];
+  $view_args = _viewfield_get_view_args($element['#item']['token_enabled'], $element['#item']['vargs'], $element['#node']);
   return _viewfield_get_view_content($view_name, $view_args, $display, $node);
 }
 
@@ -521,7 +520,7 @@ function _viewfield_get_view_content($view_name, $view_args, $display, $node) {
 /**
  * Perform argument replacement
  */
-function _viewfield_get_view_args($field, $vargs, $node) {
+function _viewfield_get_view_args($token_enabled, $vargs, $node) {
   $args = array();
 
   // Prevent token_replace() from running this function a second time
@@ -555,7 +554,7 @@ function _viewfield_get_view_args($field, $vargs, $node) {
         $pos = strlen($vargs);
       }
     }
-    if (_viewfield_token_enabled($field)) {
+    if ($token_enabled) {
       $tokens = FALSE;
       // if the view field is being loaded as a "view field" of "view row",
       // instead of a simple "node field", the node object is not fully populated:
@@ -583,7 +582,7 @@ function _viewfield_get_view_args($field, $vargs, $node) {
 function _viewfield_load_view_info(&$element) {
 
   // check if the node has been loaded
-  if (!isset($element['#item']['actual_vargs'])) {
+  if (!isset($element['#item']['token_enabled'])) {
     static $fields;
     $param_key = $element['#type_name'] .'-'. $element['#field_name'];
 
@@ -601,6 +600,6 @@ function _viewfield_load_view_info(&$element) {
       $element['#item'] = _viewfield_get_super_defaults($field);
     }
 
-    $element['#item']['actual_vargs'] = _viewfield_get_view_args($field, $element['#item']['vargs'], $element['#node']);
+    $element['#item']['token_enabled'] = _viewfield_token_enabled($field);
   }
 }
