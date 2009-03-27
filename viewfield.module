@@ -126,11 +126,11 @@ function viewfield_field($op, &$node, $field, &$items, $teaser, $page) {
 
       // get items out of fieldset
       foreach ($items as $delta => $item) {
-        if (!empty($item['fieldset']) &&
+        if (!empty($item) &&
           // the view name may be empty if we are not ovverriding the default values
-          (!empty($item['fieldset'][$field_key_vname]) ||
-          (isset($item['fieldset']['override_default']) && !$item['fieldset']['override_default']))) {
-          $items[$delta] = $field['super_default'] && !$item['fieldset']['override_default'] ? $super_defaults : $item['fieldset'];
+          (!empty($item[$field_key_vname]) ||
+          (isset($item['override_default']) && !$item['override_default']))) {
+          $items[$delta] = $field['super_default'] && !$item['override_default'] ? $super_defaults : $item;
         }
         else {
           // remove empty views
@@ -158,8 +158,10 @@ function viewfield_field($op, &$node, $field, &$items, $teaser, $page) {
  * Implementation of hook_content_is_empty().
  */
 function viewfield_content_is_empty($item, $field) {
-  $columns = array_keys($field['columns']);
-  return empty($item[$columns[0]]);
+  if (empty($item['vname'])) {
+    return TRUE;
+  }
+  return FALSE;
 }
 
 /**
@@ -223,7 +225,8 @@ function viewfield_elements() {
   $array = array(
     'viewfield_select' => array(
       '#input' => TRUE,
-      '#columns' => array('vname', 'vargs'), '#delta' => 0,
+      '#columns' => array('vname', 'vargs'),
+      '#delta' => 0,
       '#process' => array('viewfield_select_process'),
     ),
   );
@@ -281,27 +284,15 @@ function viewfield_select_process($element, $edit, $form_state, $form) {
   $super_defaults = _viewfield_get_super_defaults($form['#field_info'][$field_name]);
   $field_settings = !isset($node->uid);
 
-  $element['fieldset'] = array(
-    // The following values were set by the content module and need
-    // to be passed down to the nested element.
-    '#title' => $element['#title'],
-    '#description' => $element['#description'],
-    '#required' => $element['#required'],
-    '#field_name' => $element['#field_name'],
-    '#type_name' => $element['#type_name'],
-    '#delta' => $element['#delta'],
-    '#columns' => $element['#columns'],
-  );
-
   // This form is used for both the default value field in the admin as well as
   // the node edit form, so we have to make sure we show the default value field
   // always.
   if ($field['widget']['force_default'] && !$field_settings) {
-    $element['fieldset'][$field_key_vname] = array(
+    $element[$field_key_vname] = array(
       '#type' => 'value',
       '#value' => $super_defaults[$field_key_vname],
     );
-    $element['fieldset'][$field_key_vargs] = array(
+    $element[$field_key_vargs] = array(
       '#type' => 'value',
       '#value' => $super_defaults[$field_key_vargs], // All views share args (for now).
     );
@@ -312,7 +303,7 @@ function viewfield_select_process($element, $edit, $form_state, $form) {
 
     // Provide our own overriding of defaults.
     if ($field['super_default'] && isset($node->uid)) {
-      $element['fieldset']['override_default'] = array(
+      $element['override_default'] = array(
         '#type' => 'checkbox',
         '#title' => t('Override default'),
         // node title cannot be empty unless the node is being created right now
@@ -320,49 +311,56 @@ function viewfield_select_process($element, $edit, $form_state, $form) {
       );
     }
 
-    $element['fieldset']['#type'] = 'fieldset';
-
     if (count($options) > 1) {
-      $element['fieldset'][$field_key_vname] = array(
+      $element[$field_key_vname] = array(
         '#type' => 'select',
         '#options' => $options,
-        '#default_value' => isset($element['#value'][$field_key_vname]) ? $element['#value'][$field_key_vname] :
-          // apply the default in the field settings form
+        '#default_value' => isset($element['#value'][$field_key_vname])
+          ? $element['#value'][$field_key_vname] :
           ($field_settings ? $super_defaults[$field_key_vname] : 0),
         '#title' => $element['#title'],
         '#required' => $element['#required'],
+        '#description' => $element['#description'],
+        '#field_name' => $element['#field_name'],
+        '#type_name' => $element['#type_name'],
+        '#delta' => $element['#delta'],
+        '#columns' => $element['#columns'],
       );
       $args_title = t('Arguments');
     }
     else {
       // There's only the one view, so only show the arguments.
       list($key, $label) = each($options);
-      $element['fieldset'][$field_key_vname] = array(
+      $element[$field_key_vname] = array(
         '#type' => 'value',
         '#value' => $key,
       );
       $args_title = $field['widget']['label'] ." ($label) ". t('arguments');
     }
 
-    $element['fieldset'][$field_key_vargs] = array(
+    $element[$field_key_vargs] = array(
       '#type' => 'textfield',
       '#title' => $args_title,
-      '#default_value' => isset($element['#value'][$field_key_vargs]) ? $element['#value'][$field_key_vargs] :
-        // apply the default in the field settings form
+      '#default_value' => isset($element['#value'][$field_key_vargs])
+        ? $element['#value'][$field_key_vargs] :
         ($field_settings ? $super_defaults[$field_key_vargs] : ''),
       '#required' => FALSE,
       '#description' => t('Provide a comma separated list of arguments to pass to the view. These arguments will be passed to EACH selected view. If an argument contains commas or double quotes, enclose it in double quotes. Replace double quotes that are part of the argument with pairs of double quotes.'),
+      '#field_name' => $element['#field_name'] . t(' arguments'),
+      '#type_name' => 'text',
+      '#delta' => $element['#delta'],
+      '#columns' => $element['#columns'],
     );
 
     $token_desc = ($token_enabled = _viewfield_token_enabled($field)) ?
       'Use the syntax [token] if you want to insert a replacement pattern.':
       'You may use %nid for the node id of the current node. %author for the node author and %viewer for user viewing the node.';
-    $element['fieldset'][$field_key_vargs]['#description'] .= '<br/> '. t($token_desc);
+    $element[$field_key_vargs]['#description'] .= '<br/> '. t($token_desc);
 
     // since tabledrag.js currently cannot handle nested tables we show the token help
     // inside the fieldset only in the field settings form or in single-value mode
     if ($token_enabled && ($field_settings || !$field['multiple'])) {
-      $element['fieldset']['token_help'] = _viewfield_get_token_help();
+      $element['token_help'] = _viewfield_get_token_help();
     }
   }
   return $element;
@@ -456,7 +454,7 @@ function _viewfield_nodestack_pop() {
  */
 function _viewfield_get_super_defaults($field) {
   return $field['super_default'] ?
-    $field['super_default_widget'][0]['fieldset']:
+    $field['super_default_widget'][0]:
     array('vname' => NULL, 'vargs' => NULL);
 }
 
