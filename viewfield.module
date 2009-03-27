@@ -489,6 +489,8 @@ function _viewfield_get_token_help() {
  */
 function _viewfield_get_view_content($view_name, $view_args, $display, $node) {
   global $_viewfield_stack;
+  global $user;
+ 
   $output = '';
   // For safety's sake, we can only display 2 levels of viewfields.
   if (!empty($view_name) && count($_viewfield_stack) <= 2) {
@@ -502,8 +504,10 @@ function _viewfield_get_view_content($view_name, $view_args, $display, $node) {
     if (!empty($view)) {
       $view->set_display($display);
       $view->set_arguments($view_args);
-      $view->execute_display();
-      $output .= $view->render();
+      if ($view->access(array($display), $user)) {
+        $view->execute_display();
+        $output .= $view->render();
+      }
     }
 
     // This node is "safe" again.
