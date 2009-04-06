@@ -37,8 +37,20 @@ function viewfield_disable() {
   content_notify('disable', 'viewfield');
 }
 
-
-//function viewfield_update_6000() {
-//  $ret = array();
-//  return $ret;
-//}
+/**
+ * Implementation of hook_update_N().
+ */
+function viewfield_update_6000() {
+  $ret = array();
+  $result = db_query("SELECT field_name, global_settings FROM {content_node_field} WHERE type = 'viewfield'");
+  while ($field = db_fetch_object($result)) {
+    $field->global_settings = unserialize($field->global_settings);
+    if (isset($field->global_settings['super_default_widget'][0]['fieldset'])) {
+      $field->global_settings['super_default_widget'][0] = $field->global_settings['super_default_widget'][0]['fieldset'];
+      $field->global_settings = serialize($field->global_settings);
+      $success = db_query("UPDATE {content_node_field} SET global_settings = '%s' WHERE field_name = '%s'", $field->global_settings, $field->field_name);
+      $ret[] = array('success' => $success !== FALSE, 'query' => "UPDATE {content_node_field} SET global_settings = '". $field->global_settings ."' WHERE field_name = '". $field->field_name ."'");
+    }
+  }
+  return $ret;
+}
