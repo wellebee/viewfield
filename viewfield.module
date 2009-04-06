@@ -368,11 +368,13 @@ function viewfield_select_process($element, $edit, $form_state, $form) {
 
 function theme_viewfield_select($element) {
   $field = $element['#field_info'][$element['#field_name']];
-  if ($field['multiple'] && $element['#delta'] == 0) {
-    // this is needed only for multiple viewfields
-    drupal_add_css(drupal_get_path('module', 'viewfield') .'/viewfield.css');
+  if (!$field['widget']['force_default']) {
+    if ($field['multiple'] && $element['#delta'] == 0) {
+      // this is needed only for multiple viewfields
+      drupal_add_css(drupal_get_path('module', 'viewfield') .'/viewfield.css');
+    }
+    return '<div class="viewfield-select">'. $element['#children'] .'</div>';
   }
-  return '<div class="viewfield-select">'. $element['#children'] .'</div>';
 }
 
 /**
@@ -490,7 +492,7 @@ function _viewfield_get_token_help() {
 function _viewfield_get_view_content($view_name, $view_args, $display, $node) {
   global $_viewfield_stack;
   global $user;
- 
+
   $output = '';
   // For safety's sake, we can only display 2 levels of viewfields.
   if (!empty($view_name) && count($_viewfield_stack) <= 2) {
