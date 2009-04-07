@@ -37,6 +37,7 @@ by Darren Oh: Organized code and fixed coding standards compliance.
 by Darren Oh: Fixed more error notices.
 by Darren Oh: Added translation template.
 by Darren Oh: Fixed typo in changelog.
+by Darren Oh: Moved theme functions file to theme directory.
 
 
 Viewfield 5.x-1.x, 2007-02-05

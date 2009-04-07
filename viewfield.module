@@ -342,7 +342,7 @@ function viewfield_theme() {
   $theme_info =  array(
     'viewfield_select' => array(
       'arguments' => array('element' => NULL),
-      'file' => 'includes/viewfield.theme.inc',
+      'file' => 'theme/viewfield.theme.inc',
     )
   );
   $displays = views_fetch_plugin_data('display');
@@ -350,7 +350,7 @@ function viewfield_theme() {
     $theme_info['viewfield_formatter_'. $type] = array(
       'arguments' => array('element' => NULL),
       'function' => 'theme_viewfield_formatter',
-      'file' => 'includes/viewfield.theme.inc',
+      'file' => 'theme/viewfield.theme.inc',
     );
   }
   return $theme_info;
