@@ -31,11 +31,12 @@ by Darren Oh: Fixed error notice when force default is on.
 by Darren Oh: Reverted previous commit.
   Arguments would not display on the field settings page when force default was
   on.
-#386430 by Darren: Reverted patch.
+#386430 by Darren Oh: Reverted patch.
   Patch prevented nodes from overriding default values.
 by Darren Oh: Organized code and fixed coding standards compliance.
 by Darren Oh: Fixed more error notices.
 by Darren Oh: Added translation template.
+by Darren Oh: Fixed typo in changelog.
 
 
 Viewfield 5.x-1.x, 2007-02-05
