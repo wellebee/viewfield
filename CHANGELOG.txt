@@ -39,6 +39,7 @@ by Darren Oh: Added translation template.
 by Darren Oh: Fixed typo in changelog.
 by Darren Oh: Moved theme functions file to theme directory.
 by Darren Oh: Changed install file description.
+by Darren Oh: Fixed update to enable fields.
 
 
 Viewfield 5.x-1.x, 2007-02-05

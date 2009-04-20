@@ -46,6 +46,9 @@ function viewfield_disable() {
  * Implementation of hook_update_N().
  */
 function viewfield_update_6000() {
+  if ($abort = content_check_update('viewfield')) {
+    return $abort;
+  }
   $ret = array();
   $result = db_query("SELECT field_name, global_settings FROM {content_node_field} WHERE type = 'viewfield'");
   while ($field = db_fetch_object($result)) {
