@@ -6,8 +6,6 @@
  * Core functions.
  */
 
-define('VIEWFIELD_DEFAULT_VNAME', '<default>');
-
 /**
  * Implementation of hook_field_info().
  */
@@ -30,17 +28,12 @@ function viewfield_field_info() {
 function viewfield_field_settings($op, $field) {
   switch ($op) {
     case 'form':
-      $view_options = array();
-      $all_views = views_get_all_views();
-      foreach ($all_views as $view) {
-        $view_options[$view->name] = $view->name;
-      }
       $form['allowed_views'] = array(
         '#type' => 'checkboxes',
         '#title' => t('Allowed views'),
         '#default_value' => is_array($field['allowed_views']) ? $field['allowed_views'] : array(),
-        '#options' => $view_options,
-        '#description' => t('Only allow users to select from the specified views. If no views are selected, all will be available. If only one is selected, the user will only be able to specify the arguments.'),
+        '#options' => drupal_map_assoc(array_keys(views_get_all_views())),
+        '#description' => t('Only allow users to select from the specified views. If no views are selected, all will be available.'),
       );
       $form['super_default'] = array(
         '#type' => 'checkbox',
@@ -56,10 +49,12 @@ function viewfield_field_settings($op, $field) {
         );
       }
       $form_state = NULL;
-      $form['super_default_widget'] = array('#tree' => TRUE);
       $form['#node'] = (object) array('type' => $field['type_name']);
-      $field_form = content_field_form($form, $form_state, $field);
-      $form['super_default_widget'][0] = &$field_form[$field['field_name']][0];
+      module_load_include('inc', 'content', 'includes/content.node_form');
+      $field_form = content_field_form($form, $form_state, $field, 0);
+      $form['super_default_widget'] = &$field_form[$field['field_name']][0];
+      $form['super_default_widget']['#tree'] = TRUE;
+      unset($form['super_default_widget']['#weight']);
       return $form;
     case 'validate':
       if ($field['force_default'] && $field['multiple']) {
@@ -80,32 +75,27 @@ function viewfield_field_settings($op, $field) {
  * Implementation of hook_field().
  */
 function viewfield_field($op, &$node, $field, &$items, $teaser, $page) {
-  list($field_key_vname, $field_key_vargs) = array_keys($field['columns']);
   switch ($op) {
     case 'presave':
-      $super_defaults = array($field_key_vname => VIEWFIELD_DEFAULT_VNAME, $field_key_vargs => NULL);
       foreach ($items as $delta => $item) {
-        if (empty($item) || (!$field['super_default'] && empty($item[$field_key_vname]))) {
-          unset($items[$delta]);
+        if ($field['super_default'] && empty($item['override_default']) || $field['widget']['force_default']) {
+          $items[$delta] = array('vname' => NULL, 'vargs' => NULL);
         }
-        elseif ($field['super_default'] && empty($item['override_default'])) {
-          $items[$delta] = $super_defaults;
-          $items[$delta]['default'] = TRUE;
+        elseif (empty($item['vname'])) {
+          unset($items[$delta]);
         }
       }
       break;
     case 'load':
-      $additions = array();
       foreach ($items as $delta => $item) {
-        if ($item[$field_key_vname] == VIEWFIELD_DEFAULT_VNAME) {
-          // If the field has been set as default, load the defaults accordingly.
-          $items[$delta] = _viewfield_get_super_defaults($field);
-          $items[$delta]['default'] = TRUE;
+        $item = empty($item['vname']) || $field['widget']['force_default'] ? $field['super_default_widget'] : $item;
+        if ($field['super_default']) {
+          $item['override_default'] = !empty($item['vname']);
         }
-        $items[$delta]['token_enabled'] = _viewfield_token_enabled($field);
-        $additions[$field['field_name']][$delta] = $items[$delta];
+        $item['token_enabled'] = _viewfield_token_enabled($field);
+        $items[$delta] = $item;
       }
-      return $additions;
+      return array($field['field_name'] => $items);
   }
 }
 
@@ -120,16 +110,12 @@ function viewfield_content_is_empty($item, $field) {
  * Implementation of hook_field_formatter_info().
  */
 function viewfield_field_formatter_info() {
-  $formatters = array();
-  $displays = views_fetch_plugin_data('display');
-  foreach ($displays as $type => $details) {
-    $title = isset($details['title']) ? $details['title'] : $type;
-    $formatters[$type] = array(
-      'label' => $title,
+  return array(
+    'default' => array(
+      'label' => t('Default'),
       'field types' => array('viewfield')
-    );
-  }
-  return $formatters;
+    ),
+  );
 }
 
 /**
@@ -142,7 +128,7 @@ function viewfield_widget_info() {
       'field types' => array('viewfield'),
       'multiple_values' => CONTENT_HANDLE_CORE,
       'callbacks' => array(
-        'default_value' => CONTENT_CALLBACK_DEFAULT,
+        'default value' => CONTENT_CALLBACK_NONE,
       ),
     ),
   );
@@ -179,7 +165,7 @@ function viewfield_widget(&$form, &$form_state, $field, $items, $delta = 0) {
   }
   $element = array(
     '#type' => $field['widget']['type'],
-    '#default_value' => isset($items[$delta]) ? $items[$delta] : '',
+    '#default_value' => isset($items[$delta]) ? $items[$delta] : $field['super_default_widget'],
   );
   return $element;
 }
@@ -199,26 +185,25 @@ function viewfield_elements() {
 }
 
 function viewfield_select_process($element, $edit, $form_state, $form) {
-  $field_name = $element['#field_name'];
-  $field = $form['#field_info'][$field_name];
-  $field_key_vname = $element['#columns'][0];
-  $field_key_vargs = $element['#columns'][1];
-  $element['#field_info'] = &$form['#field_info'];
+  if (isset($form['#field'])) {
+    $field = $form['#field'];
+  }
+  else {
+    $field = $form['#field_info'][$element['#field_name']];
+  }
   $node = isset($form['#node']) ? $form['#node'] : (object) array('type' => $field['type_name']);
-  // If the super default is enabled, populate the field form accordingly.
-  $super_defaults = _viewfield_get_super_defaults($form['#field_info'][$field_name]);
   $field_settings = !isset($node->uid);
   // This form is used for both the default value field in the admin as well as
   // the node edit form, so we have to make sure we show the default value field
   // always.
   if ($field['widget']['force_default'] && !$field_settings) {
-    $element[$field_key_vname] = array(
+    $element['vname'] = array(
       '#type' => 'value',
-      '#value' => $super_defaults[$field_key_vname],
+      '#value' => $element['#default_value']['vname'],
     );
-    $element[$field_key_vargs] = array(
+    $element['vargs'] = array(
       '#type' => 'value',
-      '#value' => $super_defaults[$field_key_vargs], // All views share args (for now).
+      '#value' => $element['#default_value']['vargs'], // All views share args (for now).
     );
   }
   else {
@@ -229,14 +214,14 @@ function viewfield_select_process($element, $edit, $form_state, $form) {
       $element['override_default'] = array(
         '#type' => 'checkbox',
         '#title' => t('Override default'),
-        '#default_value' => empty($element['#value']['default']),
+        '#default_value' => $element['#value']['override_default'],
       );
     }
     if (count($options) > 1) {
-      $element[$field_key_vname] = array(
+      $element['vname'] = array(
         '#type' => 'select',
         '#options' => $options,
-        '#default_value' => isset($element['#value'][$field_key_vname]) ? $element['#value'][$field_key_vname] : ($field_settings ? $super_defaults[$field_key_vname] : NULL),
+        '#default_value' => $element['#default_value']['vname'],
         '#title' => $element['#title'],
         '#required' => $element['#required'],
         '#description' => $element['#description'],
@@ -250,16 +235,16 @@ function viewfield_select_process($element, $edit, $form_state, $form) {
     else {
       // There's only the one view, so only show the arguments.
       list($key, $label) = each($options);
-      $element[$field_key_vname] = array(
+      $element['vname'] = array(
         '#type' => 'value',
         '#value' => $key,
       );
       $args_title = $field_settings ? t('Arguments') : $field['widget']['label'] ." ($label) ". t('arguments');
     }
-    $element[$field_key_vargs] = array(
+    $element['vargs'] = array(
       '#type' => 'textfield',
       '#title' => $args_title,
-      '#default_value' => !empty($element['#value'][$field_key_vargs]) ? $element['#value'][$field_key_vargs] : ($field_settings ? $super_defaults[$field_key_vargs] : ''),
+      '#default_value' => $element['#default_value']['vargs'],
       '#required' => FALSE,
       '#description' => t('Provide a comma separated list of arguments to pass to the view. These arguments will be passed to EACH selected view. If an argument contains commas or double quotes, enclose it in double quotes. Replace double quotes that are part of the argument with pairs of double quotes.'),
       '#field_name' => $element['#field_name'] .' '. t('arguments'),
@@ -270,7 +255,7 @@ function viewfield_select_process($element, $edit, $form_state, $form) {
     $token_desc = ($token_enabled = _viewfield_token_enabled($field)) ?
       t('Use the syntax [token] if you want to insert a replacement pattern.') :
       t('You may use %nid for the node id of the current node. %author for the node author and %viewer for user viewing the node.');
-    $element[$field_key_vargs]['#description'] .= "<br/>\n$token_desc";
+    $element['vargs']['#description'] .= "<br/>\n$token_desc";
     // Since tabledrag.js currently cannot handle nested tables, we show the
     // token help inside the fieldset only in the field settings form or in
     // single-value mode.
@@ -286,24 +271,12 @@ function viewfield_select_process($element, $edit, $form_state, $form) {
  */
 function _viewfield_potential_references($field_settings = TRUE, $field = array(), $delta = 0) {
   $options = array();
-  foreach (views_get_all_views() as $view_name => $view_info) {
+  $field['allowed_views'] = array_filter($field['allowed_views']);
+  $field['allowed_views'] = empty($field['allowed_views']) ? array_keys(views_get_all_views()) : $field['allowed_views'];
+  foreach ($field['allowed_views'] as $view_name) {
     $view = views_get_view($view_name);
-    if (isset($field['allowed_views'][$view_name]) && $field['allowed_views'][$view_name]) {
-      foreach ($view->display as $display) {
-        $options[$view->name .'|'. $display->id] = $view->name .' - '. $display->display_title;
-      }
-    }
-    else {
-      $field['allowed_views'][$view_name] = $view_name;
-    }
-  }
-  // If no allowed views are selected, allow all views.
-  if (empty($options)) {
-    foreach (views_get_all_views() as $view_name => $view_info) {
-      $view = views_get_view($view_name);
-      foreach ($view->display as $display) {
-        $options[$view->name .'|'. $display->id] = $view->name .' - '. $display->display_title;
-      }
+    foreach ($view->display as $display) {
+      $options[$view->name .'|'. $display->id] = $view->name .' - '. $display->display_title;
     }
   }
   // Add a null option for non-required or multiple fields: handle multiple
@@ -339,21 +312,16 @@ function _viewfield_get_token_help() {
  * Implementation of hook_theme().
  */
 function viewfield_theme() {
-  $theme_info =  array(
+  return array(
     'viewfield_select' => array(
       'arguments' => array('element' => NULL),
       'file' => 'theme/viewfield.theme.inc',
-    )
-  );
-  $displays = views_fetch_plugin_data('display');
-  foreach ($displays as $type => $details) {
-    $theme_info['viewfield_formatter_'. $type] = array(
+    ),
+    'viewfield_formatter_default' => array(
       'arguments' => array('element' => NULL),
-      'function' => 'theme_viewfield_formatter',
       'file' => 'theme/viewfield.theme.inc',
-    );
-  }
-  return $theme_info;
+    ),
+  );
 }
 
 /**
@@ -370,7 +338,7 @@ function viewfield_views_api() {
  * If the super defaults are enabled return them, otherwise return blank values
  */
 function _viewfield_get_super_defaults($field) {
-  return $field['super_default'] ? $field['super_default_widget'][0] : array('vname' => NULL, 'vargs' => NULL);
+  return $field['super_default'] ? $field['super_default_widget'] : array('vname' => NULL, 'vargs' => NULL);
 }
 
 /**

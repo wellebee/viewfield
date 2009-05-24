@@ -7,43 +7,27 @@
  */
 
 /**
- * Theme function
+ * Return a themed view avoiding viewfield recursion.
  */
-function theme_viewfield_formatter($element) {
-  _viewfield_load_view_info($element);
-  $node = $element['#node'];
-  if ($view_info = explode('|', $element['#item']['vname'])) {
-    $view_name = $view_info[0];
-    $display = $view_info[1];
-  }
-  else {
-    $view_name = $element['#item']['vname'];
-    $display = $element['#item']['display'];
-  }
-  $view_args = _viewfield_get_view_args($element['#item']['token_enabled'], $element['#item']['vargs'], $element['#node']);
-  return _viewfield_get_view_content($view_name, $view_args, $display, $node);
-}
-
-/**
- * Load the view field data into the given $element if missing
- */
-function _viewfield_load_view_info(&$element) {
-  // Check if the node has been loaded.
-  if (!isset($element['#item']['token_enabled'])) {
-    static $fields;
-    $param_key = $element['#type_name'] .'-'. $element['#field_name'];
-    // Load field info.
-    if (!isset($fields[$param_key])) {
-      module_load_include('inc', 'content', 'includes/content.crud');
-      $param = array('type_name' => $element['#type_name'], 'field_name' => $element['#field_name']);
-      $fields[$param_key] = content_field_instance_read($param);
+function theme_viewfield_formatter_default($element) {
+  global $_viewfield_stack;
+  // For safety's sake, we can only display 2 levels of viewfields.
+  if (count($_viewfield_stack) <= 2) {
+    list($view_name, $display) = explode('|', $element['#item']['vname'], 2);
+    $view_args = _viewfield_get_view_args($element['#item']['token_enabled'], $element['#item']['vargs'], $element['#node']);
+    $node = $element['#node'];
+    // Need to prevent recursive views and node building, but don't need to do
+    // it on new node previews.
+    if ($node->nid) {
+      _viewfield_nodestack_push($node->nid);
     }
-    $field = $fields[$param_key][0];
-    if ($element['#item']['vname'] == VIEWFIELD_DEFAULT_VNAME) {
-      // We are in the default land here.
-      $element['#item'] = _viewfield_get_super_defaults($field);
+    array_unshift($view_args, $view_name, $display);
+    $output = call_user_func_array('views_embed_view', $view_args);
+    // This node is "safe" again.
+    if ($node->nid) {
+      _viewfield_nodestack_pop();
     }
-    $element['#item']['token_enabled'] = _viewfield_token_enabled($field);
+    return $output;
   }
 }
 
@@ -103,30 +87,6 @@ function _viewfield_get_view_args($token_enabled, $vargs, $node) {
     }
   }
   return $args;
-}
-
-/**
- * Return a themed view avoiding viewfield recursion.
- */
-function _viewfield_get_view_content($view_name, $view_args, $display, $node) {
-  global $_viewfield_stack;
-  global $user;
-  $output = '';
-  // For safety's sake, we can only display 2 levels of viewfields.
-  if (!empty($view_name) && count($_viewfield_stack) <= 2) {
-    // Need to prevent recursive views and node building, but don't need to do
-    // it on new node previews.
-    if ($node->nid) {
-      _viewfield_nodestack_push($node->nid);
-    }
-    array_unshift($view_args, $view_name, $display);
-    $output .= call_user_func_array('views_embed_view', $view_args);
-    // This node is "safe" again.
-    if ($node->nid) {
-      _viewfield_nodestack_pop();
-    }
-  }
-  return $output;
 }
 
 /**

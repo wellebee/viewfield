@@ -41,6 +41,8 @@ by Darren Oh: Moved theme functions file to theme directory.
 by Darren Oh: Changed install file description.
 by Darren Oh: Fixed update to enable fields.
 #373373 by ramsalt: Fixed page view changing node title.
+#416922 by Darren Oh: Fixed upgrade for existing fields.
+#434920 by Darren Oh: Fixed argument defaults being lost on save.
 
 
 Viewfield 5.x-1.x, 2007-02-05
