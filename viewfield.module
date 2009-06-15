@@ -86,7 +86,7 @@ function viewfield_field($op, &$node, $field, &$items, $teaser, $page) {
         }
       }
       break;
-    case 'load':
+    case 'sanitize':
       foreach ($items as $delta => $item) {
         $item = empty($item['vname']) || $field['widget']['force_default'] ? $field['super_default_widget'] : $item;
         if ($field['super_default']) {
