@@ -160,7 +160,7 @@ function viewfield_widget(&$form, &$form_state, $field, $items, $delta = 0) {
   // adding/editing a node we have to show the token help just below the
   // viewfield select widget.
   if ($delta == 0 && $field['multiple'] && !$field['widget']['force_default'] && _viewfield_token_enabled($field)) {
-    $form['token_help'] = _viewfield_get_token_help();
+    $form['token_help'] = _viewfield_get_token_help($field);
     $form['token_help']['#weight'] = $field['widget']['weight'] + 1;
   }
   $element = array(
@@ -185,12 +185,8 @@ function viewfield_elements() {
 }
 
 function viewfield_select_process($element, $edit, $form_state, $form) {
-  if (isset($form['#field'])) {
-    $field = $form['#field'];
-  }
-  else {
-    $field = $form['#field_info'][$element['#field_name']];
-  }
+  $field = $form['#field_info'][$element['#field_name']];
+  $element['#field_info'] = $form['#field_info'];
   $node = isset($form['#node']) ? $form['#node'] : (object) array('type' => $field['type_name']);
   $field_settings = !isset($node->uid);
   // This form is used for both the default value field in the admin as well as
@@ -260,7 +256,7 @@ function viewfield_select_process($element, $edit, $form_state, $form) {
     // token help inside the fieldset only in the field settings form or in
     // single-value mode.
     if ($token_enabled && ($field_settings || !$field['multiple'])) {
-      $element['token_help'] = _viewfield_get_token_help();
+      $element['token_help'] = _viewfield_get_token_help($field);
     }
   }
   return $element;
@@ -292,7 +288,7 @@ function _viewfield_potential_references($field_settings = TRUE, $field = array(
 /**
  * Return the token replacement help
  */
-function _viewfield_get_token_help() {
+function _viewfield_get_token_help($field) {
   // TODO: Token support right now is a bit hacked on, needs better integration,
   // eventually a checkbox to enable/disable use of token-module here.
   $token_help = array(
