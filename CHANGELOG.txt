@@ -40,9 +40,22 @@ by Darren Oh: Fixed typo in changelog.
 by Darren Oh: Moved theme functions file to theme directory.
 by Darren Oh: Changed install file description.
 by Darren Oh: Fixed update to enable fields.
+by Zoltan Balogh: Updated Hungarian translation.
 #373373 by ramsalt: Fixed page view changing node title.
 #416922 by Darren Oh: Fixed upgrade for existing fields.
 #434920 by Darren Oh: Fixed argument defaults being lost on save.
+by Darren Oh: Fixed user keyword.
+by Darren Oh: Fixed caching error.
+#480432 by Aren Cambre, hadsie, scottrigby, jerdavis: Error when creating new
+  viewfield.
+  Added is_array() check to prevent errors when the field is first being
+  created.
+#480432 by Darren Oh: Improved original fix to prevent error on line 276.
+by Darren Oh: Fixed undefined variable errors.
+#568304 by Darren Oh: Fixed rendering of fieldgroups after fieldgroup containing
+  viewfield.
+  A viewfield in a fieldgroup would prevent subsequent fieldgroups from being
+  rendered if the build mode was not full.
 
 
 Viewfield 5.x-1.x, 2007-02-05

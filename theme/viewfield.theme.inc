@@ -74,7 +74,7 @@ function _viewfield_get_view_args($token_enabled, $vargs, $node) {
       // instead of a simple "node field", the node object is not fully populated:
       // we need a full node to perform a correct replacement.
       $node_values = $node;
-      if ($node->build_mode == 'views') {
+      if ($node->build_mode !== NODE_BUILD_NORMAL) {
         $node_values = node_load($node->nid);
       }
       $args = token_replace($args, 'node', $node_values);
