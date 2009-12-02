@@ -56,6 +56,8 @@ by Darren Oh: Fixed undefined variable errors.
   viewfield.
   A viewfield in a fieldgroup would prevent subsequent fieldgroups from being
   rendered if the build mode was not full.
+#568304 by Darren Oh: Fixed missing fieldgroups in full node view after last
+  change.
 
 
 Viewfield 5.x-1.x, 2007-02-05
