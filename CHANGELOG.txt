@@ -2,6 +2,10 @@ $Id$
 
 Viewfield x.x-x.x, xxxx-xx-xx
 -----------------------------
+
+
+Viewfield 6.x-1.x, xxxx-xx-xx
+-----------------------------
 #118764 by alex_b: Fixed typo in translating arguments.
 #100085 by Eaton: Implemented plugins as formatters.
 #235572 by plach. Updated to Drupal 6.

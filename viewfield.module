@@ -56,13 +56,16 @@ function viewfield_field_settings($op, $field) {
       $form['super_default_widget']['#tree'] = TRUE;
       unset($form['super_default_widget']['#weight']);
       return $form;
+
     case 'validate':
       if ($field['force_default'] && $field['multiple']) {
         form_set_error('multiple', t('Multiple views are not supported if force default is enabled.'));
       }
       break;
+
     case 'save':
       return array('allowed_views', 'super_default', 'token_enabled', 'super_default_widget');
+
     case 'database columns':
       return array(
         'vname' => array('type' => 'varchar', 'not null' => FALSE, 'length' => 32),
@@ -86,6 +89,7 @@ function viewfield_field($op, &$node, $field, &$items, $teaser, $page) {
         }
       }
       break;
+
     case 'sanitize':
       foreach ($items as $delta => $item) {
         $item = empty($item['vname']) || $field['widget']['force_default'] ? $field['super_default_widget'] : $item;
@@ -187,11 +191,12 @@ function viewfield_elements() {
 function viewfield_select_process($element, $edit, $form_state, $form) {
   $field = $form['#field_info'][$element['#field_name']];
   $element['#field_info'] = $form['#field_info'];
-  $node = isset($form['#node']) ? $form['#node'] : (object) array('type' => $field['type_name']);
-  $field_settings = !isset($node->uid);
   // This form is used for both the default value field in the admin as well as
   // the node edit form, so we have to make sure we show the default value field
   // always.
+  $node = isset($form['#node']) ? $form['#node'] : (object) array('type' => $field['type_name']);
+  $field_settings = !isset($node->uid);
+
   if ($field['widget']['force_default'] && !$field_settings) {
     $element['vname'] = array(
       '#type' => 'value',
@@ -204,7 +209,7 @@ function viewfield_select_process($element, $edit, $form_state, $form) {
   }
   else {
     // Display the form to let the user pick a view.
-    $options = _viewfield_potential_references($field_settings, $field, $element['#delta']);
+    $options = _viewfield_potential_references($field, $element['#delta']);
     // Provide our own overriding of defaults.
     if ($field['super_default'] && !$field_settings) {
       $element['override_default'] = array(
@@ -265,7 +270,7 @@ function viewfield_select_process($element, $edit, $form_state, $form) {
 /**
  * Prepare a list of views for selection.
  */
-function _viewfield_potential_references($field_settings = TRUE, $field = array(), $delta = 0) {
+function _viewfield_potential_references($field, $delta = 0) {
   $options = array();
   $field['allowed_views'] = isset($field['allowed_views']) ? array_filter($field['allowed_views']) : array();
   $field['allowed_views'] = empty($field['allowed_views']) ? array_keys(views_get_all_views()) : $field['allowed_views'];
@@ -275,11 +280,8 @@ function _viewfield_potential_references($field_settings = TRUE, $field = array(
       $options[$view->name .'|'. $display->id] = $view->name .' - '. $display->display_title;
     }
   }
-  // Add a null option for non-required or multiple fields: handle multiple
-  // views by adding an empty option, otherwise at each submit the user would
-  // add a new view. If the field is required AND multiple the first widget has
-  // no empty choice.
-  if (!$field_settings && (!$field['required'] || ($field['multiple'] && $delta > 0))) {
+  // Add a '0' option for non-required or subsequent values of multiple fields.
+  if (!$field['required'] || ($field['multiple'] && $delta > 0)) {
     array_unshift($options, '<'. t('none') .'>');
   }
   return $options;
