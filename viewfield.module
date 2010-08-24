@@ -12,8 +12,10 @@
 function viewfield_field_info() {
   return array(
     'viewfield' => array(
-      'label' => t('View field'),
-      'description' => t('Defines a field type that displays the contents of a view in a node.'),
+      // Should be "View", but that would translate into "view" (show) for many
+      // languages due to missing string translation contexts.
+      'label' => t('Views'),
+      'description' => t('Displays a selected view in a node.'),
       'callbacks' => array(
         'tables' => CONTENT_CALLBACK_NONE,
         'arguments' => CONTENT_CALLBACK_NONE,
@@ -30,24 +32,23 @@ function viewfield_field_settings($op, $field) {
     case 'form':
       $form['allowed_views'] = array(
         '#type' => 'checkboxes',
-        '#title' => t('Allowed views'),
+        '#title' => t('Allowed values'),
         '#default_value' => is_array($field['allowed_views']) ? $field['allowed_views'] : array(),
         '#options' => drupal_map_assoc(array_keys(views_get_all_views())),
-        '#description' => t('Only allow users to select from the specified views. If no views are selected, all will be available.'),
+        '#description' => t('Only selected views will be available for content authors. Leave empty to allow all.'),
       );
       $form['super_default'] = array(
         '#type' => 'checkbox',
         '#title' => t('Use a common default value for all nodes if the user does not override it on the node form.'),
         '#default_value' => $field['super_default'],
       );
-      if (module_exists('token')) {
-        $form['token_enabled'] = array(
-          '#type' => 'checkbox',
-          '#title' => t('Enable token replacements.'),
-          '#description' => t('Token replacements will affect the site performance if using a Viewfield inside a View that has <em>field</em> row style.'),
-          '#default_value' => $field['token_enabled'],
-        );
-      }
+      $form['token_enabled'] = array(
+        '#type' => 'checkbox',
+        '#title' => t('Replace token placeholders'),
+        '#description' => t('Negatively affects site performance in combination with %fields row style.', array('%fields' => t('Fields'))),
+        '#default_value' => $field['token_enabled'],
+        '#access' => module_exists('token'),
+      );
       $form_state = NULL;
       $form['#node'] = (object) array('type' => $field['type_name']);
       module_load_include('inc', 'content', 'includes/content.node_form');
@@ -146,11 +147,12 @@ function viewfield_widget_settings($op, $widget) {
     case 'form':
       $form['force_default'] = array(
         '#type' => 'checkbox',
-        '#title' => t('Force default'),
+        '#title' => t('Always use default value'),
         '#default_value' => $widget['force_default'],
-        '#description' => t('If checked, the user will not be able to change anything about the view at all. It will not even be shown on the edit node page. The default value will be used instead.'),
+        '#description' => t('Hides this field in forms and forces the default value defined below.'),
       );
       return $form;
+
     case 'save':
       return array('force_default');
   }
@@ -226,12 +228,7 @@ function viewfield_select_process($element, $edit, $form_state, $form) {
         '#title' => $element['#title'],
         '#required' => $element['#required'],
         '#description' => $element['#description'],
-        '#field_name' => $element['#field_name'],
-        '#type_name' => $element['#type_name'],
-        '#delta' => $element['#delta'],
-        '#columns' => $element['#columns'],
       );
-      $args_title = t('Arguments');
     }
     else {
       // There's only the one view, so only show the arguments.
@@ -240,18 +237,16 @@ function viewfield_select_process($element, $edit, $form_state, $form) {
         '#type' => 'value',
         '#value' => $key,
       );
-      $args_title = $field_settings ? t('Arguments') : $field['widget']['label'] ." ($label) ". t('arguments');
     }
     $element['vargs'] = array(
       '#type' => 'textfield',
-      '#title' => $args_title,
+      '#title' => !isset($label) ? t('Arguments') : t('%field (@value) arguments', array(
+        '%field' => $field['widget']['label'],
+        '@value' => $label,
+      )),
       '#default_value' => $element['#default_value']['vargs'],
       '#required' => FALSE,
       '#description' => t('Provide a comma separated list of arguments to pass to the view. These arguments will be passed to EACH selected view. If an argument contains commas or double quotes, enclose it in double quotes. Replace double quotes that are part of the argument with pairs of double quotes.'),
-      '#field_name' => $element['#field_name'] .' '. t('arguments'),
-      '#type_name' => 'text',
-      '#delta' => $element['#delta'],
-      '#columns' => $element['#columns'],
     );
     $token_desc = ($token_enabled = _viewfield_token_enabled($field)) ?
       t('Use the syntax [token] if you want to insert a replacement pattern.') :

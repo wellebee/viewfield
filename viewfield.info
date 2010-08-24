@@ -1,6 +1,6 @@
 ; $Id$
 name = Viewfield
-description = Defines a field type that displays the contents of a view in a node.
+description = Defines a field type to display a view.
 package = CCK
 dependencies[] = views
 dependencies[] = content
