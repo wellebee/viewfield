@@ -21,13 +21,23 @@ function theme_viewfield_formatter_default($element) {
     if ($node->nid) {
       _viewfield_nodestack_push($node->nid);
     }
-    array_unshift($view_args, $view_name, $display);
-    $output = call_user_func_array('views_embed_view', $view_args);
+
+    // Render the view like Views would do.
+    // @see views_embed_view()
+    $view = views_get_view($view_name);
+    if ($view && $view->access($display)) {
+      $output = $view->preview($display, $view_args);
+    }
+
     // This node is "safe" again.
     if ($node->nid) {
       _viewfield_nodestack_pop();
     }
-    return $output;
+
+    // Only return an actual view result to not break empty value behavior.
+    if (isset($output)) {
+      return $output;
+    }
   }
 }
 
