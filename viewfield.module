@@ -272,8 +272,12 @@ function viewfield_select_process($element, $edit, $form_state, $form) {
  */
 function _viewfield_potential_references($field, $delta = 0) {
   $options = array();
-  $field['allowed_views'] = isset($field['allowed_views']) ? array_filter($field['allowed_views']) : array();
-  $field['allowed_views'] = empty($field['allowed_views']) ? array_keys(views_get_all_views()) : $field['allowed_views'];
+  if (isset($field['allowed_views']) && is_array($field['allowed_views'])) {
+    $field['allowed_views'] = array_filter($field['allowed_views']);
+  }
+  else {
+    $field['allowed_views'] = array_keys(views_get_all_views());
+  }
   foreach ($field['allowed_views'] as $view_name) {
     $view = views_get_view($view_name);
     foreach ($view->display as $display) {
