@@ -6,6 +6,10 @@ Viewfield x.x-x.x, xxxx-xx-xx
 
 Viewfield 6.x-1.x, xxxx-xx-xx
 -----------------------------
+
+
+Viewfield 6.x-1.0, 2010-08-24
+-----------------------------
 by sun: Fixed character encoding and line endings of all files.
 #509406 by sun, askibinski, KarenS: Fixed views field select options.
 #118764 by alex_b: Fixed typo in translating arguments.
