@@ -26,6 +26,10 @@ function theme_viewfield_formatter_default($element) {
     // @see views_embed_view()
     $view = views_get_view($view_name);
     if ($view && $view->access($display)) {
+      // Override the view's path to the current path. Otherwise, exposed views
+      // filters would submit to the front page.
+      $view->override_path = $_GET['q'];
+
       $output = $view->preview($display, $view_args);
     }
 
