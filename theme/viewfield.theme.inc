@@ -11,15 +11,16 @@
  */
 function theme_viewfield_formatter_default($element) {
   global $_viewfield_stack;
+
+  $node = $element['#node'];
   // For safety's sake, we can only display 2 levels of viewfields.
-  if (count($_viewfield_stack) <= 2) {
+  if (!isset($_viewfield_stack[$node->nid]) && count($_viewfield_stack) <= 2) {
     list($view_name, $display) = explode('|', $element['#item']['vname'], 2);
     $view_args = _viewfield_get_view_args($element['#item']['token_enabled'], $element['#item']['vargs'], $element['#node']);
-    $node = $element['#node'];
-    // Need to prevent recursive views and node building, but don't need to do
-    // it on new node previews.
+
+    // Prevent infinite recursion.
     if ($node->nid) {
-      _viewfield_nodestack_push($node->nid);
+      $_viewfield_stack[$node->nid] = $node->nid;
     }
 
     // Render the view like Views would do.
@@ -35,7 +36,7 @@ function theme_viewfield_formatter_default($element) {
 
     // This node is "safe" again.
     if ($node->nid) {
-      _viewfield_nodestack_pop();
+      unset($_viewfield_stack[$node->nid]);
     }
 
     // Only return an actual view result to not break empty value behavior.
@@ -98,29 +99,6 @@ function _viewfield_get_view_args($token_enabled, $vargs, $node) {
     }
   }
   return $args;
-}
-
-/**
- * Function for adding a node ID to the global stack of node IDs. This prevents
- * us from recursively building a node, with a view, with the node, with the
- * view...
- */
-function _viewfield_nodestack_push($nid) {
-  global $_viewfield_stack;
-  if (!isset($_viewfield_stack)) {
-    $_viewfield_stack = array();
-  }
-  $_viewfield_stack[] = $nid;
-}
-
-/**
- * Function for removing a node ID from the global stack of node IDs when there
- * is no longer a danger of building a node, with a view, with the node, with
- * the view...
- */
-function _viewfield_nodestack_pop() {
-  global $_viewfield_stack;
-  return array_pop($_viewfield_stack);
 }
 
 function theme_viewfield_select($element) {
