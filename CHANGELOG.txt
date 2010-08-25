@@ -6,6 +6,7 @@ Viewfield x.x-x.x, xxxx-xx-xx
 
 Viewfield 6.x-1.x, xxxx-xx-xx
 -----------------------------
+#647746 by sun: Fixed %author id of node not always passed to view.
 #571128 by sun: Fixed field setting labels and descriptions (UX).
 #535494 by sun, chaps2: Fixed view is processed twice for tokens.
 #831574 by sun: Fixed array_filter PHP warning.

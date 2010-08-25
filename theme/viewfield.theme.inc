@@ -93,9 +93,12 @@ function _viewfield_get_view_args($token_enabled, $vargs, $node) {
       $tokens = TRUE;
     }
     // For backwards compatibility, we scan for %nid, etc.
-    global $user;
-    foreach ($args as $key => $a) {
-      $args[$key] = strtr($a, array('%nid' => $node->nid, '%author' => $node_values->uid, '%viewer' => $user->uid));
+    foreach ($args as $key => $value) {
+      $args[$key] = strtr($value, array(
+        '%nid' => $node->nid,
+        '%author' => isset($node->uid) ? $node->uid : (isset($node_values->uid) ? $node_values->uid : NULL),
+        '%viewer' => $GLOBALS['user']->uid,
+      ));
     }
   }
   return $args;
