@@ -1,4 +1,3 @@
-$Id$
 
 Viewfield x.x-x.x, xxxx-xx-xx
 -----------------------------

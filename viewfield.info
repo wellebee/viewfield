@@ -1,4 +1,3 @@
-; $Id$
 name = Viewfield
 description = Defines a field type to display a view.
 package = CCK
