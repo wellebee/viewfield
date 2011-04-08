@@ -68,7 +68,9 @@ function viewfield_field_settings($op, $field) {
 
     case 'database columns':
       return array(
-        'vname' => array('type' => 'varchar', 'not null' => FALSE, 'length' => 32),
+        // Views requires at least 96 chars for the view name and display, plus
+        // we need 1 for our delimiter. Round up to a common value of 128.
+        'vname' => array('type' => 'varchar', 'not null' => FALSE, 'length' => 128),
         'vargs' => array('type' => 'varchar', 'not null' => FALSE, 'length' => 255),
       );
   }

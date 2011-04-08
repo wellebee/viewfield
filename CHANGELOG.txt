@@ -12,6 +12,7 @@ Viewfield 6.x-1.x, xxxx-xx-xx
 #477244 by muhleder, japanitrat, sun: Fixed empty view result output.
 Issue #1120884 by keithm: Fixed viewfield creation notices.
 Issue #1052370 by Anclywen: Fix unrestricted list of allowed views.
+Issue #416922 by frjo, keithm: Fixed vname too short.
 
 Viewfield 6.x-1.0, 2010-08-24
 -----------------------------
