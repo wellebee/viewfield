@@ -190,8 +190,8 @@ function viewfield_elements() {
 }
 
 function viewfield_select_process($element, $edit, $form_state, $form) {
-  $field = $form['#field_info'][$element['#field_name']];
-  $element['#field_info'] = $form['#field_info'];
+  $field = isset($form['#field_info'][$element['#field_name']]) ? $form['#field_info'][$element['#field_name']] : NULL;
+  $element['#field_info'] = isset($form['#field_info']) ? $form['#field_info'] : NULL;
   // This form is used for both the default value field in the admin as well as
   // the node edit form, so we have to make sure we show the default value field
   // always.
@@ -223,7 +223,7 @@ function viewfield_select_process($element, $edit, $form_state, $form) {
       $element['vname'] = array(
         '#type' => 'select',
         '#options' => $options,
-        '#default_value' => $element['#default_value']['vname'],
+        '#default_value' => isset($element['#default_value']['vname']) ? $element['#default_value']['vname'] : NULL,
         '#title' => $element['#title'],
         '#required' => $element['#required'],
         '#description' => $element['#description'],
@@ -243,7 +243,7 @@ function viewfield_select_process($element, $edit, $form_state, $form) {
         '%field' => $field['widget']['label'],
         '@value' => $label,
       )),
-      '#default_value' => $element['#default_value']['vargs'],
+      '#default_value' => isset($element['#default_value']['vargs']) ? $element['#default_value']['vargs'] : NULL,
       '#required' => FALSE,
       '#description' => t('Provide a comma separated list of arguments to pass to the view. These arguments will be passed to EACH selected view. If an argument contains commas or double quotes, enclose it in double quotes. Replace double quotes that are part of the argument with pairs of double quotes.'),
     );
@@ -279,7 +279,7 @@ function _viewfield_potential_references($field, $delta = 0) {
     }
   }
   // Add a '0' option for non-required or subsequent values of multiple fields.
-  if (!$field['required'] || ($field['multiple'] && $delta > 0)) {
+  if (empty($field['required']) || ($field['multiple'] && $delta > 0)) {
     array_unshift($options, '<'. t('none') .'>');
   }
   return $options;

@@ -11,6 +11,7 @@ Viewfield 6.x-1.x, xxxx-xx-xx
 #831574 by sun: Fixed array_filter PHP warning.
 #510356 by etzel, sun: Fixed exposed filters submitting to front page.
 #477244 by muhleder, japanitrat, sun: Fixed empty view result output.
+Issue #1120884 by keithm: Fixed viewfield creation notices.
 
 
 Viewfield 6.x-1.0, 2010-08-24
