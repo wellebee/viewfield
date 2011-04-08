@@ -269,7 +269,7 @@ function _viewfield_potential_references($field, $delta = 0) {
   if (isset($field['allowed_views']) && is_array($field['allowed_views'])) {
     $field['allowed_views'] = array_filter($field['allowed_views']);
   }
-  else {
+  if (empty($field['allowed_views'])) {
     $field['allowed_views'] = array_keys(views_get_all_views());
   }
   foreach ($field['allowed_views'] as $view_name) {

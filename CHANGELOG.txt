@@ -1,4 +1,3 @@
-
 Viewfield x.x-x.x, xxxx-xx-xx
 -----------------------------
 
@@ -12,7 +11,7 @@ Viewfield 6.x-1.x, xxxx-xx-xx
 #510356 by etzel, sun: Fixed exposed filters submitting to front page.
 #477244 by muhleder, japanitrat, sun: Fixed empty view result output.
 Issue #1120884 by keithm: Fixed viewfield creation notices.
-
+Issue #1052370 by Anclywen: Fix unrestricted list of allowed views.
 
 Viewfield 6.x-1.0, 2010-08-24
 -----------------------------
