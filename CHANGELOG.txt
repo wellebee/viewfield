@@ -1,6 +1,22 @@
 Viewfield x.x-x.x, xxxx-xx-xx
 -----------------------------
 
+Viewfield 6.x-2.x, xxxx-xx-xx
+-----------------------------
+#489908 by sun, keithm: Change default value settings to field instance level.
+  - $field['super_default'] is gone, which previously allowed saving nodes
+    with no viewfield value, but then to use the field's configured default
+    values automatically. This had an effect only for nodes that were created
+    before the viewfield was created, because viewfields in nodes created after
+    any field is created receive the configured default value preselected in the
+    node edit form, and CCK/Field API always stores a value, even if it is the
+    same as the default value.
+  - $field['super_default_widget'] is equally gone, without replacement, as it
+    merely completed aforementioned functionality.
+  - $field['widget']['override_default'] is also gone, ditto.
+  - $field['token_enabled'] is also gone, as we can replace both legacy tokens
+    and Token module tokens without conflicts.
+  - Global default values are migrated to the instance level.
 
 Viewfield 6.x-1.x, xxxx-xx-xx
 -----------------------------

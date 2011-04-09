@@ -112,3 +112,35 @@ function viewfield_update_6001() {
   }
   return $ret;
 }
+
+/**
+ * Migrate global default_value settings to instance level.
+ */
+function viewfield_update_6002() {
+  if ($abort = content_check_update('viewfield')) {
+    return $abort;
+  }
+  $ret = array();
+  $settings_updates = array();
+  $instance_table = content_instance_tablename();
+  $field_table = content_field_tablename();
+  $result = db_query("SELECT * FROM {". $instance_table ."} it LEFT JOIN {". $field_table ."} ft ON ft.field_name = it.field_name WHERE ft.type = 'viewfield'");
+  while ($field = db_fetch_array($result)) {
+     $global_settings = unserialize($field['global_settings']);
+     $widget_settings = unserialize($field['widget_settings']);
+     if (isset($global_settings['super_default_widget']['vname']) && !isset($widget_settings['default_value'][0]['vname'])) {
+       $widget_settings['default_value'][0]['vname'] = $global_settings['super_default_widget']['vname'];
+       $widget_settings['default_value'][0]['vargs'] = $global_settings['super_default_widget']['vargs'];
+       $settings_updates[] = array(
+         'field_name' => $field['field_name'],
+         'type_name' => $field['type_name'],
+         'widget_settings' => serialize($widget_settings),
+       );
+     }
+  }
+  foreach ($settings_updates as $settings_update) {
+    $sql = sprintf("UPDATE {" . $instance_table . "} SET widget_settings = '%s' WHERE field_name = '%s' AND type_name = '%s'", $settings_update['widget_settings'], $settings_update['field_name'], $settings_update['type_name']);
+    $ret[] = update_sql($sql);
+  }
+  return $ret;
+}

@@ -15,7 +15,7 @@ function theme_viewfield_formatter_default($element) {
   // For safety's sake, we can only display 2 levels of viewfields.
   if (!isset($_viewfield_stack[$node->nid]) && count($_viewfield_stack) <= 2) {
     list($view_name, $display) = explode('|', $element['#item']['vname'], 2);
-    $view_args = _viewfield_get_view_args($element['#item']['token_enabled'], $element['#item']['vargs'], $element['#node']);
+    $view_args = _viewfield_get_view_args($element['#item']['vargs'], $element['#node']);
 
     // Prevent infinite recursion.
     if ($node->nid) {
@@ -48,7 +48,7 @@ function theme_viewfield_formatter_default($element) {
 /**
  * Perform argument replacement
  */
-function _viewfield_get_view_args($token_enabled, $vargs, $node) {
+function _viewfield_get_view_args($vargs, $node) {
   $args = array();
   // Prevent token_replace() from running this function a second time
   // before it completes the first time.
@@ -82,7 +82,8 @@ function _viewfield_get_view_args($token_enabled, $vargs, $node) {
         $pos = strlen($vargs);
       }
     }
-    if ($token_enabled) {
+    // Try to replace tokens if $args might contain one.
+    if (strpos($vargs, '[') !== FALSE && module_exists('token')) {
       $tokens = FALSE;
       // If the view field is being loaded as a "view field" of "view row",
       // instead of a simple "node field", the node object is not fully populated:
@@ -105,7 +106,7 @@ function _viewfield_get_view_args($token_enabled, $vargs, $node) {
 
 function theme_viewfield_select($element) {
   if (!empty($element['#children'])) {
-    $field = $element['#field_info'][$element['#field_name']];
+    $field = $element['#field'];
     if ($field['multiple'] && $element['#delta'] == 0) {
       // This is needed only for multiple viewfields.
       drupal_add_css(drupal_get_path('module', 'viewfield') .'/theme/viewfield.css');
