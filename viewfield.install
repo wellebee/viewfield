@@ -79,8 +79,8 @@ function viewfield_update_6000() {
 }
 
 /**
- * Implements hook_update_N()
  * Update vname fields to varchar(128).
+ *
  * @see viewfield_field_settings()
  */
 function viewfield_update_6001() {
@@ -102,14 +102,12 @@ function viewfield_update_6001() {
       $field_database_info = content_database_info($field);
       $table_name = $field_database_info['table'];
       $vname_info = $field_database_info['columns']['vname'];
-      db_change_field($ret, $table_name, $vname_info['column'], $vname_info['column'],
-        array(
-          'type' => 'varchar',
-          'length' => $new_length,
-          'not null' => TRUE,
-          'default' => '',
-        )
-      );
+      db_change_field($ret, $table_name, $vname_info['column'], $vname_info['column'], array(
+        'type' => 'varchar',
+        'length' => $new_length,
+        'not null' => TRUE,
+        'default' => '',
+      ));
     }
   }
   return $ret;
