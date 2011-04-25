@@ -4,6 +4,7 @@ Viewfield x.x-x.x, xxxx-xx-xx
 
 Viewfield 6.x-1.x, xxxx-xx-xx
 -----------------------------
+#416922 by keithm: Fixed update_6001 to check current size < 128 before update.
 #416922 by frjo, keithm: Fixed vname too short.
 #1052370 by Anclywen: Fixed unrestricted list of allowed views.
 #1120884 by keithm: Fixed viewfield creation notices.
