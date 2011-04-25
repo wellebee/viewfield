@@ -9,19 +9,28 @@
  * Return a themed view avoiding viewfield recursion.
  */
 function theme_viewfield_formatter_default($variables) {
+  // $_viewfield_stack keeps a record of the current entity to prevent infinite
+  // recursion during the view rendering process. See also
+  // viewfield_views_query_alter() in includes/viewfield.views.inc.
   global $_viewfield_stack;
+  if (empty($_viewfield_stack)) {
+    $_viewfield_stack = _viewfield_stack_create();
+  }
 
   $item = $variables['item'];
-  $node = $variables['node'];
-  // For safety's sake, we can only display 2 levels of viewfields.
-  if (!isset($_viewfield_stack[$node->nid]) && count($_viewfield_stack) <= 2) {
-    list($view_name, $display) = explode('|', $item['vname'], 2);
-    $view_args = _viewfield_get_view_args($item['vargs'], 'node', 'nid', $node);
+  $entity_type = $variables['entity_type'];
+  $entity = $variables['entity'];
+  $entity_info = entity_get_info($entity_type);
+  $entity_id_key = $entity_info['entity keys']['id'];
+  $entity_id = $entity->{$entity_id_key};
 
-    // Prevent infinite recursion.
-    if ($node->nid) {
-      $_viewfield_stack[$node->nid] = $node->nid;
+  if (!empty($item['vname']) && _viewfield_stack_check($_viewfield_stack, $entity_type, $entity_id)) {
+    // Push id of current entity unless it's a new entity being previewed.
+    if ($entity_id) {
+      _viewfield_stack_push($_viewfield_stack, $entity_type, $entity_id_key, $entity_id);
     }
+    list($view_name, $display) = explode('|', $item['vname'], 2);
+    $view_args = _viewfield_get_view_args($item['vargs'], $entity_type, $entity_id_key, $entity);
 
     // Render the view like Views would do.
     // @see views_embed_view()
@@ -34,9 +43,9 @@ function theme_viewfield_formatter_default($variables) {
       $output = $view->preview($display, $view_args);
     }
 
-    // This node is "safe" again.
-    if ($node->nid) {
-      unset($_viewfield_stack[$node->nid]);
+    // Pop current entity.
+    if ($entity_id) {
+      _viewfield_stack_pop($_viewfield_stack, $entity_type);
     }
 
     // Only return an actual view result to not break empty value behavior.

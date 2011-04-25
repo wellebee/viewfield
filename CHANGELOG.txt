@@ -3,6 +3,7 @@ Viewfield x.x-x.x, xxxx-xx-xx
 
 Viewfield 7.x-2.x, xxxx-xx-xx
 -----------------------------
+#1140810 by keithm: Added support for all fieldable entities.
 #704014 by keithm: Added support for Drupal 7.
 
 Viewfield 6.x-2.x, xxxx-xx-xx

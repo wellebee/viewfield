@@ -12,10 +12,13 @@
  */
 function viewfield_views_query_alter(&$view, &$query) {
   global $_viewfield_stack;
-
-  if (!empty($_viewfield_stack) && isset($query->table_queue['node'])) {
-    $field = $query->table_queue['node']['alias'] . '.nid';
-    $values = array_values($_viewfield_stack);
-    $query->add_where(0, $field, $values, 'not in');
+  if (!empty($_viewfield_stack)) {
+    foreach ($_viewfield_stack['entity_stacks'] as $entity_type => $entity_type_entry) {
+      if (isset($query->table_queue[$entity_type])) {
+        $field = $query->table_queue[$entity_type]['alias'] . '.' . $entity_type_entry['entity_id_key'];
+        $values = $entity_type_entry['entity_id_set'];
+        $query->add_where(0, $field, $values, 'not in');
+      }
+    }
   }
 }

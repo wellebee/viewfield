@@ -31,5 +31,5 @@ function viewfield_field_schema($field) {
  * Implements hook_update_last_removed().
  */
 function viewfield_update_last_removed() {
-  return 6002;
+  return 6004;
 }
