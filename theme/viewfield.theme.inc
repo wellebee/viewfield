@@ -8,14 +8,15 @@
 /**
  * Return a themed view avoiding viewfield recursion.
  */
-function theme_viewfield_formatter_default($element) {
+function theme_viewfield_formatter_default($variables) {
   global $_viewfield_stack;
 
-  $node = $element['#node'];
+  $item = $variables['item'];
+  $node = $variables['node'];
   // For safety's sake, we can only display 2 levels of viewfields.
   if (!isset($_viewfield_stack[$node->nid]) && count($_viewfield_stack) <= 2) {
-    list($view_name, $display) = explode('|', $element['#item']['vname'], 2);
-    $view_args = _viewfield_get_view_args($element['#item']['vargs'], $element['#node']);
+    list($view_name, $display) = explode('|', $item['vname'], 2);
+    $view_args = _viewfield_get_view_args($item['vargs'], 'node', 'nid', $node);
 
     // Prevent infinite recursion.
     if ($node->nid) {
@@ -48,12 +49,12 @@ function theme_viewfield_formatter_default($element) {
 /**
  * Perform argument replacement
  */
-function _viewfield_get_view_args($vargs, $node) {
+function _viewfield_get_view_args($vargs, $entity_type, $entity_id_key, $entity) {
   $args = array();
-  // Prevent token_replace() from running this function a second time
-  // before it completes the first time.
-  static $tokens = TRUE;
-  if ($tokens && !empty($vargs)) {
+  // Prevent token_replace() from running this function a second time before it
+  // completes the first time.
+  static $replacing_tokens = FALSE;
+  if (!$replacing_tokens && !empty($vargs)) {
     $pos = 0;
     while ($pos < strlen($vargs)) {
       $found = FALSE;
@@ -82,26 +83,39 @@ function _viewfield_get_view_args($vargs, $node) {
         $pos = strlen($vargs);
       }
     }
-    // Try to replace tokens if $args might contain one.
-    if (strpos($vargs, '[') !== FALSE && module_exists('token')) {
-      $tokens = FALSE;
-      // If the view field is being loaded as a "view field" of "view row",
-      // instead of a simple "node field", the node object is not fully populated:
-      // we need a full node to perform a correct replacement.
-      $node_values = node_load($node->nid);
-      $args = token_replace($args, 'node', $node_values);
-      $tokens = TRUE;
-    }
-    // For backwards compatibility, we scan for %nid, etc.
+
+    $replacing_tokens = TRUE;
+    $token_data = array($entity_type => $entity);
+    $entity_loaded = FALSE;
     foreach ($args as $key => $value) {
-      $args[$key] = strtr($value, array(
-        '%nid' => $node->nid,
-        '%author' => isset($node->uid) ? $node->uid : (isset($node_values->uid) ? $node_values->uid : NULL),
-        '%viewer' => $GLOBALS['user']->uid,
-      ));
+      // Load the full entity only when required.
+      if (!$entity_loaded && _viewfield_token_requires_load($value, $entity_type, $entity_id_key)) {
+        $id = $entity->{$entity_id_key};
+        $entities = entity_load($entity_type, array($id));
+        $token_data = array($entity_type => $entities[$id]);
+        $entity_loaded = TRUE;
+      }
+     $args[$key] = token_replace($value, $token_data);
     }
+    $replacing_tokens = FALSE;
   }
   return $args;
+}
+
+/**
+ *  Detect if a token requires a full entity to be loaded.
+ *  We conservatively require a load if a token refers to the entity type but
+ *  the token key is not the entity id. For example, if the $entity_type == '
+ *  node' and $entity_id_key == 'nid', we are searching for tokens of the
+ *  form [node:some-key] where some-key != 'nid'.
+ *  Global tokens (e.g., [current-user:uid]) never require entity loading.
+ */
+function _viewfield_token_requires_load($text, $entity_type, $entity_id_key) {
+  $pattern = '/^\[' . $entity_type . ':(.*)\]$/';
+  if (preg_match($pattern, $text, $matches)) {
+    return ($entity_id_key !== $matches[1]);
+  }
+  return FALSE;
 }
 
 function theme_viewfield_select($element) {

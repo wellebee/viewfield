@@ -1,6 +1,5 @@
 name = Viewfield
 description = Defines a field type to display a view.
-package = CCK
+core = 7.x
+package = Fields
 dependencies[] = views
-dependencies[] = content
-core = 6.x

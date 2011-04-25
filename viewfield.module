@@ -3,12 +3,10 @@
 /**
  * @file
  * Core functions.
- *
- * @todo Double-check potential performance issues mentioned in code comments.
  */
 
 /**
- * Implementation of hook_field_info().
+ * Implements hook_field_info().
  */
 function viewfield_field_info() {
   return array(
@@ -17,69 +15,43 @@ function viewfield_field_info() {
       // languages due to missing string translation contexts.
       'label' => t('Views'),
       'description' => t('Displays a selected view in a node.'),
-      'callbacks' => array(
-        'tables' => CONTENT_CALLBACK_NONE,
-        'arguments' => CONTENT_CALLBACK_NONE,
-      ),
+      'settings' => array('allowed_views' => array()),
+      'default_widget' => 'viewfield_select',
+      'default_formatter' => 'viewfield_default',
     ),
   );
 }
 
 /**
- * Implementation of hook_field_settings().
+ * Implements hook_field_settings_form().
  */
-function viewfield_field_settings($op, $field) {
-  switch ($op) {
-    case 'form':
-      $form['allowed_views'] = array(
-        '#type' => 'checkboxes',
-        '#title' => t('Allowed values'),
-        '#default_value' => is_array($field['allowed_views']) ? $field['allowed_views'] : array(),
-        '#options' => drupal_map_assoc(array_keys(views_get_all_views())),
-        '#description' => t('Only selected views will be available for content authors. Leave empty to allow all.'),
-      );
-      return $form;
+function viewfield_field_settings_form($field, $instance, $has_data) {
+  $settings = $field['settings'];
+  $form['allowed_views'] = array(
+    '#type' => 'checkboxes',
+    '#title' => t('Allowed values'),
+    '#options' => drupal_map_assoc(array_keys(views_get_all_views())),
+    '#default_value' => isset($settings['allowed_views']) && is_array($settings['allowed_views']) ? $settings['allowed_views'] : array(),
+    '#description' => t('Only selected views will be available for content authors. Leave empty to allow all.'),
+  );
+  return $form;
+}
 
-    case 'validate':
-      if ($field['force_default'] && $field['multiple']) {
-        form_set_error('multiple', t('Multiple views are not supported if force default is enabled.'));
-      }
-      break;
-
-    case 'save':
-      return array(
-        'allowed_views',
-      );
-
-    case 'database columns':
-      return array(
-        // Views requires at least 96 chars for the view name and display, plus
-        // we need 1 for our delimiter. Round up to a common value of 128.
-        'vname' => array('type' => 'varchar', 'not null' => FALSE, 'length' => 128),
-        'vargs' => array('type' => 'varchar', 'not null' => FALSE, 'length' => 255),
-      );
+/**
+ * Implements hook_field_presave().
+ */
+function viewfield_field_presave($entity_type, $entity, $field, $instance, $langcode, &$items) {
+  foreach ($items as $delta => $item) {
+    if (empty($item['vname'])) {
+      unset($items[$delta]);
+    }
   }
 }
 
 /**
- * Implementation of hook_field().
+ * Implements hook_field_is_empty().
  */
-function viewfield_field($op, &$node, $field, &$items, $teaser, $page) {
-  switch ($op) {
-    case 'presave':
-      foreach ($items as $delta => $item) {
-        if (empty($item['vname'])) {
-          unset($items[$delta]);
-        }
-      }
-      break;
-  }
-}
-
-/**
- * Implementation of hook_content_is_empty().
- */
-function viewfield_content_is_empty($item, $field) {
+function viewfield_field_is_empty($item, $field) {
   return empty($item['vname']);
 }
 
@@ -88,7 +60,7 @@ function viewfield_content_is_empty($item, $field) {
  */
 function viewfield_field_formatter_info() {
   return array(
-    'default' => array(
+    'viewfield_default' => array(
       'label' => t('Default'),
       'field types' => array('viewfield')
     ),
@@ -96,57 +68,78 @@ function viewfield_field_formatter_info() {
 }
 
 /**
- * Implementation of hook_widget_info().
+ * Implements hook_field_formatter_view().
  */
-function viewfield_widget_info() {
+function viewfield_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
+  $elements = array();
+  switch ($display['type']) {
+    case 'viewfield_default':
+      foreach ($items as $delta => $item) {
+        $elements[$delta] = array(
+          '#markup' => theme('viewfield_formatter_default', array(
+            'item' => $item,
+            'node' => $entity,
+          )),
+        );
+      }
+      break;
+  }
+  return $elements;
+}
+
+/**
+ * Implements hook_field_widget_info().
+ */
+function viewfield_field_widget_info() {
   return array(
     'viewfield_select' => array(
       'label' => 'Select List',
       'field types' => array('viewfield'),
-      'multiple_values' => CONTENT_HANDLE_CORE,
-      'callbacks' => array(
-        'default value' => CONTENT_CALLBACK_DEFAULT,
-      ),
+      'settings' => array('force_default' => FALSE),
     ),
   );
 }
 
 /**
- * Implementation of hook_widget_settings().
+ * Implements hook_field_widget_settings_form().
  */
-function viewfield_widget_settings($op, $widget) {
-  switch ($op) {
-    case 'form':
-      $form['force_default'] = array(
-        '#type' => 'checkbox',
-        '#title' => t('Always use default value'),
-        '#default_value' => $widget['force_default'],
-        '#description' => t('Hides this field in forms and forces the default value defined below.'),
-      );
-      return $form;
+function viewfield_field_widget_settings_form($field, $instance) {
+  $form['force_default'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Always use default value'),
+    '#default_value' => $instance['widget']['settings']['force_default'],
+    '#description' => t('Hides this field in forms and forces the default value defined below.'),
+  );
+  $form['#element_validate'] = array('viewfield_field_widget_settings_form_validate');
+  return $form;
+}
 
-    case 'save':
-      return array(
-        'force_default',
-      );
+/**
+ * Implements #element_validate for viewfield_field_widget_settings_form().
+ */
+function viewfield_field_widget_settings_form_validate($form, &$form_state) {
+  $field = $form_state['values']['field'];
+  $settings = $form_state['values']['instance']['widget']['settings'];
+  if ($settings['force_default'] && $field['cardinality'] != 1) {
+    form_set_error('instance][widget][settings][force_default', t('Multiple views are not supported if force default is enabled.'));
   }
 }
 
 /**
- * Implementation of hook_widget().
+ * Implements hook_field_widget_form().
  */
-function viewfield_widget(&$form, &$form_state, $field, $items, $delta = 0) {
-  $element = array(
-    '#type' => $field['widget']['type'],
+function viewfield_field_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
+  $element += array(
+    '#type' => $instance['widget']['type'],
     '#default_value' => isset($items[$delta]) ? $items[$delta] : NULL,
   );
   return $element;
 }
 
 /**
- * Implementation of FAPI hook_elements().
+ * Implements hook_element_info().
  */
-function viewfield_elements() {
+function viewfield_element_info() {
   return array(
     'viewfield_select' => array(
       '#input' => TRUE,
@@ -157,49 +150,52 @@ function viewfield_elements() {
   );
 }
 
-function viewfield_select_process($element, $edit, $form_state, $form) {
+/**
+ * Implements #process for viewfield_element_info().
+ */
+function viewfield_select_process($element, &$form_state, $complete_form) {
   // This form is used for both the default value field in the admin as well as
-  // the node edit form, so we have to make sure we show the default value field
-  // always.
-  $is_field_settings_form = !isset($form['#node']);
-
-  $field = isset($form['#field_info'][$element['#field_name']]) ? $form['#field_info'][$element['#field_name']] : NULL;
+  // the entity edit form, so we have to make sure we always show the default
+  // value field.
+  $is_field_settings_form = !isset($complete_form['#entity_type']);
+  $field = field_widget_field($element, $form_state);
+  $instance = field_widget_instance($element, $form_state);
+  $widget = $instance['widget'];
   $element['#field'] = $field;
   // Display the form to let the user pick a view.
-  $options = _viewfield_potential_references($field, $element['#delta']);
+  $options = _viewfield_potential_references($field, $instance, $element['#delta']);
   $element['vname'] = array(
     '#type' => 'select',
     '#title' => $element['#title'],
     '#options' => $options,
-    '#default_value' => isset($field['widget']['default_value']) ? $field['widget']['default_value'][$element['#delta']]['vname'] : NULL,
-    '#required' => $element['#required'],
-    '#access' => $is_field_settings_form || !$field['widget']['force_default'],
+    '#default_value' => $element['#default_value']['vname'],
+    '#required' => $instance['required'],
+    '#access' => $is_field_settings_form || !$widget['settings']['force_default'],
     '#description' => $element['#description'],
   );
   // If there is only one option, only show arguments.
-  if (count($options) == 1 && !$is_field_settings_form) {
+  if (count($options) === 1 && !$is_field_settings_form) {
     list($key, $label) = each($options);
     $element['vname']['#access'] = FALSE;
     $element['vname']['#default_value'] = $key;
   }
-
   $element['vargs'] = array(
     '#type' => 'textfield',
     '#title' => !isset($label) ? t('Arguments') : t('%field (@value) arguments', array(
-      '%field' => $field['widget']['label'],
+      '%field' => $instance['label'],
       '@value' => $label,
     )),
-    '#default_value' => isset($field['widget']['default_value']) ? $field['widget']['default_value'][$element['#delta']]['vargs'] : NULL,
-    '#access' => $is_field_settings_form || !$field['widget']['force_default'],
+    '#default_value' => $element['#default_value']['vargs'],
+    '#access' => $is_field_settings_form || !$widget['settings']['force_default'],
     '#description' => t('A comma separated list of arguments to pass to the selected view. Wrap arguments containing commas in double quotes. Replace double quotes in arguments with two double quotes.'),
   );
-  $token_description = t('Available tokens: %nid for the id of the current node; %author for the node author; %viewer for the viewing user');
+  // Provide token help.
   if (module_exists('token')) {
     $element['vargs']['#description'] .=
-      '<br />' . $token_description . '; ' . t('or any token from the placeholder token list.')
+      '<br />' . t('Available tokens: any token from the placeholder token list.')
       . '<br />' . t('Note: Using placeholder tokens in combination with the %fields row style may negatively affect site performance.', array('%fields' => t('Fields')));
     // Only show token help for first value or in field settings form.
-    if ($element['#delta'] == 0 && !$field['widget']['force_default']) {
+    if ($element['#delta'] === 0 && !$widget['settings']['force_default']) {
       $element['token_help'] = array(
         '#type' => 'fieldset',
         '#title' => t('Placeholder tokens'),
@@ -207,12 +203,18 @@ function viewfield_select_process($element, $edit, $form_state, $form) {
         '#collapsed' => TRUE,
       );
       $element['token_help']['tokens'] = array(
-        '#value' => theme('token_help', 'node'),
+        '#theme' => 'token_tree',
+        '#token_types' => array($element['#entity_type']),
+        '#global_types' => TRUE,
       );
     }
   }
   else {
-    $element['vargs']['#description'] .= '<br />' . $token_description . '.';
+    $entity_info = entity_get_info($element['#entity_type']);
+    $entity_id_token = '[' . $element['#entity_type'] . ':' . $entity_info['entity keys']['id'] . ']';
+    $element['vargs']['#description'] .=
+    '<br />' . t('You may use %entity-id-token for the id of the current entity.', array('%entity-id-token' => $entity_id_token))
+    . '<br />' . t('Enable the %token module to get a complete listing of replacement tokens.', array('%token' => t('Token')));
   }
 
   return $element;
@@ -221,23 +223,24 @@ function viewfield_select_process($element, $edit, $form_state, $form) {
 /**
  * Prepare a list of views for selection.
  */
-function _viewfield_potential_references($field, $delta = 0) {
+function _viewfield_potential_references($field, $instance, $delta = 0) {
   $options = array();
-  if (isset($field['allowed_views']) && is_array($field['allowed_views'])) {
-    $field['allowed_views'] = array_filter($field['allowed_views']);
+  $settings = $field['settings'];
+  if (isset($settings['allowed_views']) && is_array($settings['allowed_views'])) {
+    $settings['allowed_views'] = array_filter($settings['allowed_views']);
   }
-  if (empty($field['allowed_views'])) {
-    $field['allowed_views'] = array_keys(views_get_all_views());
+  if (empty($settings['allowed_views'])) {
+    $settings['allowed_views'] = array_keys(views_get_all_views());
   }
-  foreach ($field['allowed_views'] as $view_name) {
+  foreach ($settings['allowed_views'] as $view_name) {
     $view = views_get_view($view_name);
     foreach ($view->display as $display) {
-      $options[$view->name .'|'. $display->id] = $view->name .' - '. $display->display_title;
+      $options[$view->name . '|' . $display->id] = $view->name . ' - ' . $display->display_title;
     }
   }
   // Add a '0' option for non-required or subsequent values of multiple fields.
-  if (empty($field['required']) || ($field['multiple'] && $delta > 0)) {
-    array_unshift($options, '<'. t('none') .'>');
+  if (empty($instance['required']) || ($field['cardinality'] != 1 && $delta > 0)) {
+    array_unshift($options, '<' . t('none') . '>');
   }
   return $options;
 }
@@ -248,11 +251,14 @@ function _viewfield_potential_references($field, $delta = 0) {
 function viewfield_theme() {
   return array(
     'viewfield_select' => array(
-      'arguments' => array('element' => NULL),
+      'render element' => array('element' => NULL),
       'file' => 'theme/viewfield.theme.inc',
     ),
     'viewfield_formatter_default' => array(
-      'arguments' => array('element' => NULL),
+      'variables' => array(
+        'item' => NULL,
+        'node' => NULL,
+      ),
       'file' => 'theme/viewfield.theme.inc',
     ),
   );
@@ -263,7 +269,58 @@ function viewfield_theme() {
  */
 function viewfield_views_api() {
   return array(
-    'api' => 2.0,
+    'api' => 3.0,
     'path' => drupal_get_path('module', 'viewfield') .'/includes',
   );
+}
+
+/**
+ * Implements hook_content_migrate_instance_alter().
+ */
+function viewfield_content_migrate_instance_alter(&$instance_value, $field_value) {
+  switch ($field_value['type']) {
+    case 'viewfield':
+      // Change formatter names to be prefixed with 'viewfield_'.
+      foreach ($instance_value['display'] as $context => $settings) {
+        if (strpos('viewfield_', $settings['type']) !== 0) {
+          $instance_value['display'][$context]['type'] = 'viewfield_' . $settings['type'];
+        }
+      }
+      // Migrate legacy tokens in CCK fields to core tokens in D7 fields.
+      if (isset($instance_value['default_value'])) {
+        foreach ($instance_value['default_value'] as $key => $default) {
+          if (!empty($default['vargs'])) {
+            $instance_value['default_value'][$key]['vargs'] = _viewfield_migrate_legacy_tokens($default['vargs']);
+          }
+        }
+      }
+      break;
+  }
+}
+
+/**
+ * Implements hook_content_migrate_data_record_alter().
+ *
+ */
+function viewfield_content_migrate_data_record_alter(&$record, $field) {
+  switch($field['type']) {
+    case 'viewfield':
+      // Migrate legacy tokens in CCK fields to core tokens in D7 fields.
+      $vargs_field_name = $field['field_name'] . '_vargs';
+      if (!empty($record[$vargs_field_name])) {
+        $record[$vargs_field_name] = _viewfield_migrate_legacy_tokens($record[$vargs_field_name]);
+      }
+      break;
+  }
+}
+
+/**
+ * Substitute core tokens for legacy tokens (%nid, %author, %viewer) in text.
+ */
+function _viewfield_migrate_legacy_tokens($text) {
+  return strtr($text, array(
+    '%nid' => '[node:nid]',
+    '%author' => '[node:author]',
+    '%viewer' => '[current-user:uid]',
+  ));
 }
