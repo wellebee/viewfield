@@ -3,6 +3,7 @@ Viewfield x.x-x.x, xxxx-xx-xx
 
 Viewfield 6.x-2.x, xxxx-xx-xx
 -----------------------------
+#416922 by keithm: Fixed update_6001 to check current size < 128 before update.
 #489908 by sun, keithm: Change default value settings to field instance level.
   - $field['super_default'] is gone, which previously allowed saving nodes
     with no viewfield value, but then to use the field's configured default
