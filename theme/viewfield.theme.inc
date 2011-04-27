@@ -95,7 +95,7 @@ function _viewfield_get_view_args($vargs, $entity_type, $entity_id_key, $entity)
         $token_data = array($entity_type => $entities[$id]);
         $entity_loaded = TRUE;
       }
-     $args[$key] = token_replace($value, $token_data);
+      $args[$key] = token_replace($value, $token_data);
     }
     $replacing_tokens = FALSE;
   }
@@ -104,6 +104,7 @@ function _viewfield_get_view_args($vargs, $entity_type, $entity_id_key, $entity)
 
 /**
  *  Detect if a token requires a full entity to be loaded.
+ *
  *  We conservatively require a load if a token refers to the entity type but
  *  the token key is not the entity id. For example, if the $entity_type == '
  *  node' and $entity_id_key == 'nid', we are searching for tokens of the
@@ -123,8 +124,8 @@ function theme_viewfield_select($element) {
     $field = $element['#field'];
     if ($field['multiple'] && $element['#delta'] == 0) {
       // This is needed only for multiple viewfields.
-      drupal_add_css(drupal_get_path('module', 'viewfield') .'/theme/viewfield.css');
+      drupal_add_css(drupal_get_path('module', 'viewfield') . '/theme/viewfield.css');
     }
-    return '<div class="viewfield-select">'. $element['#children'] .'</div>';
+    return '<div class="viewfield-select">' . $element['#children'] . '</div>';
   }
 }

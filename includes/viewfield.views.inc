@@ -6,7 +6,7 @@
  */
 
 /**
- * Implementation of hook_views_query_alter().
+ * Implements hook_views_query_alter().
  *
  * Prevent views from loading the node containing the view.
  */

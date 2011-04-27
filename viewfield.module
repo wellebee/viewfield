@@ -56,7 +56,7 @@ function viewfield_field_is_empty($item, $field) {
 }
 
 /**
- * Implementation of hook_field_formatter_info().
+ * Implements hook_field_formatter_info().
  */
 function viewfield_field_formatter_info() {
   return array(
@@ -246,7 +246,7 @@ function _viewfield_potential_references($field, $instance, $delta = 0) {
 }
 
 /**
- * Implementation of hook_theme().
+ * Implements hook_theme().
  */
 function viewfield_theme() {
   return array(
@@ -265,12 +265,12 @@ function viewfield_theme() {
 }
 
 /**
- * Implementation of hook_views_api().
+ * Implements hook_views_api().
  */
 function viewfield_views_api() {
   return array(
     'api' => 3.0,
-    'path' => drupal_get_path('module', 'viewfield') .'/includes',
+    'path' => drupal_get_path('module', 'viewfield') . '/includes',
   );
 }
 
@@ -300,10 +300,9 @@ function viewfield_content_migrate_instance_alter(&$instance_value, $field_value
 
 /**
  * Implements hook_content_migrate_data_record_alter().
- *
  */
 function viewfield_content_migrate_data_record_alter(&$record, $field) {
-  switch($field['type']) {
+  switch ($field['type']) {
     case 'viewfield':
       // Migrate legacy tokens in CCK fields to core tokens in D7 fields.
       $vargs_field_name = $field['field_name'] . '_vargs';
