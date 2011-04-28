@@ -81,9 +81,25 @@ function viewfield_update_6000() {
 /**
  * Update vname fields to varchar(128).
  *
- * @see viewfield_field_settings()
+ * Removed due to error:
+ * @see viewfield_update_6003()
+ * @see http://drupal.org/node/1141200
  */
 function viewfield_update_6001() {
+}
+
+/**
+ * Moved to update_6004() because update_6001() was fixed as update_6003().
+ */
+function viewfield_update_6002() {
+}
+
+/**
+ * Update vname fields to varchar(128).
+ *
+ * @see viewfield_field_settings()
+ */
+function viewfield_update_6003() {
   if ($abort = content_check_update('viewfield')) {
     return $abort;
   }
@@ -104,14 +120,15 @@ function viewfield_update_6001() {
       $field_database_info = content_database_info($field);
       $table_name = $field_database_info['table'];
       $vname_info = $field_database_info['columns']['vname'];
-      if ($vname_info['length'] < $new_length) {
-        db_change_field($ret, $table_name, $vname_info['column'], $vname_info['column'], array(
-          'type' => 'varchar',
-          'length' => $new_length,
-          'not null' => TRUE,
-          'default' => '',
-        ));
-      }
+      // Apply to all fields, not just those with length < 128 because of bug in
+      // 6001. If that update had been applied already, we want to make sure
+      // this one gets applied.
+      db_change_field($ret, $table_name, $vname_info['column'], $vname_info['column'], array(
+        'type' => 'varchar',
+        'length' => $new_length,
+        'not null' => FALSE,
+        'default' => NULL,
+      ));
     }
   }
   return $ret;
@@ -120,7 +137,7 @@ function viewfield_update_6001() {
 /**
  * Migrate global default_value settings to instance level.
  */
-function viewfield_update_6002() {
+function viewfield_update_6004() {
   if ($abort = content_check_update('viewfield')) {
     return $abort;
   }
