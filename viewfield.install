@@ -164,8 +164,9 @@ function viewfield_update_6004() {
      }
   }
   foreach ($settings_updates as $settings_update) {
-    $sql = sprintf("UPDATE {" . $instance_table . "} SET widget_settings = '%s' WHERE field_name = '%s' AND type_name = '%s'", $settings_update['widget_settings'], $settings_update['field_name'], $settings_update['type_name']);
-    $ret[] = update_sql($sql);
+    $sql = "UPDATE {" . $instance_table . "} SET widget_settings = '%s' WHERE field_name = '%s' AND type_name = '%s'";
+    $update = db_query($sql, $settings_update['widget_settings'], $settings_update['field_name'], $settings_update['type_name']);
+    $ret[] = array('success' => $update !== FALSE, 'query' => $sql);
   }
   return $ret;
 }
