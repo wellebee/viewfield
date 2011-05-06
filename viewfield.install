@@ -86,12 +86,16 @@ function viewfield_update_6000() {
  * @see http://drupal.org/node/1141200
  */
 function viewfield_update_6001() {
+  $ret = array();
+  return $ret;
 }
 
 /**
  * Placeholder for update in 6.x-2.x.
  */
 function viewfield_update_6002() {
+  $ret = array();
+  return $ret;
 }
 
 /**
