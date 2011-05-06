@@ -3,6 +3,7 @@ Viewfield x.x-x.x, xxxx-xx-xx
 
 Viewfield 6.x-2.x, xxxx-xx-xx
 -----------------------------
+#1147558 by dwightaspinwall, sun: Fixed updates with empty contents.
 #1141200 by wojtha, keithm: Fixed column vname to allow NULL.
 #416922 by keithm: Fixed update_6001 to check current size < 128 before update.
 #489908 by sun, keithm: Change default value settings to field instance level.
