@@ -10,27 +10,22 @@
  */
 function theme_viewfield_formatter_default($variables) {
   // $_viewfield_stack keeps a record of the current entity to prevent infinite
-  // recursion during the view rendering process. See also
-  // viewfield_views_query_alter() in includes/viewfield.views.inc.
+  // recursion during the view rendering process.
+  // @see viewfield_views_query_alter()
   global $_viewfield_stack;
-  if (empty($_viewfield_stack)) {
-    $_viewfield_stack = _viewfield_stack_create();
-  }
 
   $item = $variables['item'];
   $entity_type = $variables['entity_type'];
   $entity = $variables['entity'];
-  $entity_info = entity_get_info($entity_type);
-  $entity_id_key = $entity_info['entity keys']['id'];
-  $entity_id = $entity->{$entity_id_key};
+  list($entity_id) = entity_extract_ids($entity_type, $entity);
 
-  if (!empty($item['vname']) && _viewfield_stack_check($_viewfield_stack, $entity_type, $entity_id)) {
+  if (!empty($item['vname']) && !isset($_viewfield_stack[$entity_type][$entity_id])) {
     // Push id of current entity unless it's a new entity being previewed.
     if ($entity_id) {
-      _viewfield_stack_push($_viewfield_stack, $entity_type, $entity_id_key, $entity_id);
+      $_viewfield_stack[$entity_type][$entity_id] = $entity_id;
     }
     list($view_name, $display) = explode('|', $item['vname'], 2);
-    $view_args = _viewfield_get_view_args($item['vargs'], $entity_type, $entity_id_key, $entity);
+    $view_args = _viewfield_get_view_args($item['vargs'], $entity_type, $entity);
 
     // Render the view like Views would do.
     // @see views_embed_view()
@@ -43,9 +38,8 @@ function theme_viewfield_formatter_default($variables) {
       $output = $view->preview($display, $view_args);
     }
 
-    // Pop current entity.
     if ($entity_id) {
-      _viewfield_stack_pop($_viewfield_stack, $entity_type);
+      unset($_viewfield_stack[$entity_type][$entity_id]);
     }
 
     // Only return an actual view result to not break empty value behavior.
@@ -58,7 +52,7 @@ function theme_viewfield_formatter_default($variables) {
 /**
  * Perform argument replacement
  */
-function _viewfield_get_view_args($vargs, $entity_type, $entity_id_key, $entity) {
+function _viewfield_get_view_args($vargs, $entity_type, $entity) {
   $args = array();
   // Prevent token_replace() from running this function a second time before it
   // completes the first time.
@@ -98,10 +92,10 @@ function _viewfield_get_view_args($vargs, $entity_type, $entity_id_key, $entity)
     $entity_loaded = FALSE;
     foreach ($args as $key => $value) {
       // Load the full entity only when required.
-      if (!$entity_loaded && _viewfield_token_requires_load($value, $entity_type, $entity_id_key)) {
-        $id = $entity->{$entity_id_key};
-        $entities = entity_load($entity_type, array($id));
-        $token_data = array($entity_type => $entities[$id]);
+      if (!$entity_loaded && _viewfield_token_requires_load($value, $entity_type)) {
+        list($entity_id) = entity_extract_ids($entity_type, $entity);
+        $entities = entity_load($entity_type, array($entity_id));
+        $token_data = array($entity_type => $entities[$entity_id]);
         $entity_loaded = TRUE;
       }
       $args[$key] = token_replace($value, $token_data);
@@ -120,7 +114,9 @@ function _viewfield_get_view_args($vargs, $entity_type, $entity_id_key, $entity)
  *  form [node:some-key] where some-key != 'nid'.
  *  Global tokens (e.g., [current-user:uid]) never require entity loading.
  */
-function _viewfield_token_requires_load($text, $entity_type, $entity_id_key) {
+function _viewfield_token_requires_load($text, $entity_type) {
+  $entity_info = entity_get_info($entity_type);
+  $entity_id_key = $entity_info['entity keys']['id'];
   $pattern = '/^\[' . $entity_type . ':(.*)\]$/';
   if (preg_match($pattern, $text, $matches)) {
     return ($entity_id_key !== $matches[1]);

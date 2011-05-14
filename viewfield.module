@@ -6,12 +6,6 @@
  */
 
 /**
- * Allowed levels of viewfield recursion.
- * @see _viewfield_stack_check().
- */
-define('VIEWFIELD_MAX_RECURSION_LEVEL', 2);
-
-/**
  * Implements hook_field_info().
  */
 function viewfield_field_info() {
@@ -280,53 +274,6 @@ function viewfield_views_api() {
     'api' => 3.0,
     'path' => drupal_get_path('module', 'viewfield') . '/includes',
   );
-}
-
-/**
- * Create a viewfield_stack.
- *
- * The stack is organized as follows:
- * stack_count => the total number of entities on the stack,
- * and then for each entity type there is an entry of the form:
- * entity_type => array(entity_id_key, array(id1, id2, id3, ...)).
- */
-function _viewfield_stack_create() {
-  return array(
-    'stack_count' => 0,
-    'entity_stacks' => array(),
-  );
-}
-
-function _viewfield_stack_push(&$stack, $entity_type, $entity_id_key, $entity_id) {
-  if (!isset($stack['entity_stacks'][$entity_type])) {
-    $stack['entity_stacks'][$entity_type] = array(
-      'entity_id_key' => $entity_id_key,
-      'entity_id_set' => array(),
-    );
-  }
-  $stack['stack_count']++;
-  $stack['entity_stacks'][$entity_type]['entity_id_set'][] = $entity_id;
-}
-
-function _viewfield_stack_pop(&$stack, $entity_type) {
-  array_pop($stack['entity_stacks'][$entity_type]['entity_id_set']);
-  $stack['stack_count']--;
-  if (empty($stack['entity_stacks'][$entity_type]['entity_id_set'])) {
-    unset($stack['entity_stacks'][$entity_type]);
-  }
-}
-
-/**
- * Check if we should descend another level in the rendering process.
- *
- * (1) display up to VIEWFIELD_MAX_RECURSION_LEVEL levels of viewfields as a
- * compromise between fidelity and performance;
- * (2) never do this operation twice for the same entity.
- */
-function _viewfield_stack_check($stack, $entity_type, $entity_id) {
-  return ($stack['stack_count'] <= VIEWFIELD_MAX_RECURSION_LEVEL) &&
-          !(isset($stack['entity_stacks'][$entity_type]['entity_id_set']) &&
-            in_array($entity_id, $stack['entity_stacks'][$entity_type]['entity_id_set']));
 }
 
 /**
