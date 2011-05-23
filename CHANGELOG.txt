@@ -1,11 +1,10 @@
-Viewfield x.x-x.x, xxxx-xx-xx
------------------------------
 
 Viewfield 7.x-2.x, xxxx-xx-xx
 -----------------------------
 #1140810 by sun, keithm: Fixed entity handling and changed stack structure.
 #1140810 by keithm: Added support for all fieldable entities.
 #704014 by keithm: Added support for Drupal 7.
+
 
 Viewfield 6.x-2.x, xxxx-xx-xx
 -----------------------------
@@ -25,6 +24,7 @@ Viewfield 6.x-2.x, xxxx-xx-xx
     and Token module tokens without conflicts.
   - Global default values are migrated to the instance level.
 
+
 Viewfield 6.x-1.x, xxxx-xx-xx
 -----------------------------
 #416922 by frjo, keithm: Fixed vname too short.
@@ -36,6 +36,7 @@ Viewfield 6.x-1.x, xxxx-xx-xx
 #831574 by sun: Fixed array_filter PHP warning.
 #510356 by etzel, sun: Fixed exposed filters submitting to front page.
 #477244 by muhleder, japanitrat, sun: Fixed empty view result output.
+
 
 Viewfield 6.x-1.0, 2010-08-24
 -----------------------------

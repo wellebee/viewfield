@@ -3,3 +3,4 @@ description = Defines a field type to display a view.
 core = 7.x
 package = Fields
 dependencies[] = views
+files[] = tests/viewfield.test
