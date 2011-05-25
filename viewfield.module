@@ -234,9 +234,11 @@ function _viewfield_potential_references($field, $instance, $delta = 0) {
     $settings['allowed_views'] = array_keys(views_get_all_views());
   }
   foreach ($settings['allowed_views'] as $view_name) {
-    $view = views_get_view($view_name);
-    foreach ($view->display as $display) {
-      $options[$view->name . '|' . $display->id] = $view->name . ' - ' . $display->display_title;
+    // Check for deleted views saved in allowed_views.
+    if ($view = views_get_view($view_name)) {
+      foreach ($view->display as $display) {
+        $options[$view->name . '|' . $display->id] = $view->name . ' - ' . $display->display_title;
+      }
     }
   }
   // Add a '0' option for non-required or subsequent values of multiple fields.

@@ -1,6 +1,8 @@
 
 Viewfield 7.x-2.x, xxxx-xx-xx
 -----------------------------
+#1048516 by GoZ, keithm: Fixed select list to test for deleted view.
+by sun: Fixed documentation, added test file.
 #1140810 by sun, keithm: Fixed entity handling and changed stack structure.
 #1140810 by keithm: Added support for all fieldable entities.
 #704014 by keithm: Added support for Drupal 7.
