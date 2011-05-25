@@ -275,6 +275,7 @@ function _viewfield_potential_references($field, $delta = 0) {
     $field['allowed_views'] = array_keys(views_get_all_views());
   }
   foreach ($field['allowed_views'] as $view_name) {
+    // Check for deleted views saved in allowed_views.
     if ($view = views_get_view($view_name)) {
       foreach ($view->display as $display) {
         $options[$view->name .'|'. $display->id] = $view->name .' - '. $display->display_title;
