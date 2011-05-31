@@ -169,7 +169,7 @@ function viewfield_select_process($element, &$form_state, $complete_form) {
     '#type' => 'select',
     '#title' => $element['#title'],
     '#options' => $options,
-    '#default_value' => $element['#default_value']['vname'],
+    '#default_value' => !$is_field_settings_form && $widget['settings']['force_default'] ? $instance['default_value'][$element['#delta']]['vname'] : $element['#default_value']['vname'],
     '#required' => $instance['required'],
     '#access' => $is_field_settings_form || !$widget['settings']['force_default'],
     '#description' => $element['#description'],
@@ -186,7 +186,7 @@ function viewfield_select_process($element, &$form_state, $complete_form) {
       '%field' => $instance['label'],
       '@value' => $label,
     )),
-    '#default_value' => $element['#default_value']['vargs'],
+    '#default_value' => !$is_field_settings_form && $widget['settings']['force_default'] ? $instance['default_value'][$element['#delta']]['vargs'] : $element['#default_value']['vargs'],
     '#access' => $is_field_settings_form || !$widget['settings']['force_default'],
     '#description' => t('A comma separated list of arguments to pass to the selected view. Wrap arguments containing commas in double quotes. Replace double quotes in arguments with two double quotes.'),
   );
