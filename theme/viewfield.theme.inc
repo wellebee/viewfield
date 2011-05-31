@@ -30,12 +30,7 @@ function theme_viewfield_formatter_default($element) {
       // filters would submit to the front page.
       $view->override_path = $_GET['q'];
 
-      $view_output = $view->preview($display, $view_args);
-      // Check to make sure views returned real content so we don't produce
-      // just wrapper divs containing no content.
-      if ($view->result) {
-        $output = $view_output;
-      }
+      $output = $view->preview($display, $view_args);
     }
 
     // This node is "safe" again.
