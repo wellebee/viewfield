@@ -130,10 +130,20 @@ function viewfield_field_widget_settings_form_validate($form, &$form_state) {
  * Implements hook_field_widget_form().
  */
 function viewfield_field_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
-  $element += array(
-    '#type' => $instance['widget']['type'],
-    '#default_value' => isset($items[$delta]) ? $items[$delta] : NULL,
-  );
+  $element['#type'] = $instance['widget']['type'];
+  // If a stored value exists and we're not forcing a default value, use it as
+  // default value.
+  if (isset($items[$delta]) && !$instance['widget']['settings']['force_default']) {
+    $element['#default_value'] = $items[$delta];
+  }
+  // Otherwise, use the widget's default value, if any.
+  elseif (isset($instance['default_value'][$delta])) {
+    $element['#default_value'] = $instance['default_value'][$delta];
+  }
+  else {
+    $element['#default_value'] = NULL;
+  }
+
   return $element;
 }
 
@@ -169,7 +179,7 @@ function viewfield_select_process($element, &$form_state, $complete_form) {
     '#type' => 'select',
     '#title' => $element['#title'],
     '#options' => $options,
-    '#default_value' => !$is_field_settings_form && $widget['settings']['force_default'] ? $instance['default_value'][$element['#delta']]['vname'] : $element['#default_value']['vname'],
+    '#default_value' => isset($element['#default_value']['vname']) ? $element['#default_value']['vname'] : NULL,
     '#required' => $instance['required'],
     '#access' => $is_field_settings_form || !$widget['settings']['force_default'],
     '#description' => $element['#description'],
@@ -186,7 +196,7 @@ function viewfield_select_process($element, &$form_state, $complete_form) {
       '%field' => $instance['label'],
       '@value' => $label,
     )),
-    '#default_value' => !$is_field_settings_form && $widget['settings']['force_default'] ? $instance['default_value'][$element['#delta']]['vargs'] : $element['#default_value']['vargs'],
+    '#default_value' => isset($element['#default_value']['vargs']) ? $element['#default_value']['vargs'] : NULL,
     '#access' => $is_field_settings_form || !$widget['settings']['force_default'],
     '#description' => t('A comma separated list of arguments to pass to the selected view. Wrap arguments containing commas in double quotes. Replace double quotes in arguments with two double quotes.'),
   );
