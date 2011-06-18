@@ -136,10 +136,20 @@ function viewfield_widget_settings($op, $widget) {
  * Implementation of hook_widget().
  */
 function viewfield_widget(&$form, &$form_state, $field, $items, $delta = 0) {
-  $element = array(
-    '#type' => $field['widget']['type'],
-    '#default_value' => isset($items[$delta]) ? $items[$delta] : NULL,
-  );
+  $element['#type'] = $field['widget']['type'];
+  // If a stored value exists and we're not forcing a default value, use it as
+  // default value.
+  if (isset($items[$delta]) && !$field['widget']['force_default']) {
+    $element['#default_value'] = $items[$delta];
+  }
+  // Otherwise, use the widget's default value, if any.
+  elseif (isset($field['widget']['default_value'])) {
+    $element['#default_value'] = $field['widget']['default_value'][$delta];
+  }
+  else {
+    $element['#default_value'] = NULL;
+  }
+
   return $element;
 }
 
@@ -171,7 +181,7 @@ function viewfield_select_process($element, $edit, $form_state, $form) {
     '#type' => 'select',
     '#title' => $element['#title'],
     '#options' => $options,
-    '#default_value' => isset($field['widget']['default_value']) ? $field['widget']['default_value'][$element['#delta']]['vname'] : NULL,
+    '#default_value' => isset($element['#default_value']['vname']) ? $element['#default_value']['vname'] : NULL,
     '#required' => $element['#required'],
     '#access' => $is_field_settings_form || !$field['widget']['force_default'],
     '#description' => $element['#description'],
@@ -189,7 +199,7 @@ function viewfield_select_process($element, $edit, $form_state, $form) {
       '%field' => $field['widget']['label'],
       '@value' => $label,
     )),
-    '#default_value' => isset($field['widget']['default_value']) ? $field['widget']['default_value'][$element['#delta']]['vargs'] : NULL,
+    '#default_value' => isset($element['#default_value']['vargs']) ? $element['#default_value']['vargs'] : NULL,
     '#access' => $is_field_settings_form || !$field['widget']['force_default'],
     '#description' => t('A comma separated list of arguments to pass to the selected view. Wrap arguments containing commas in double quotes. Replace double quotes in arguments with two double quotes.'),
   );

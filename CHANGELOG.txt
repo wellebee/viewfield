@@ -3,6 +3,7 @@ Viewfield x.x-x.x, xxxx-xx-xx
 
 Viewfield 6.x-2.x, xxxx-xx-xx
 -----------------------------
+#311587 by sun, keithm: Fixed force default handling.
 by keithm: Rolled back #903034 because it breaks views headers/footers.
 #903034 by keithm: Fixed bug producing output for empty view.
 #1048516 by GoZ, keithm: Fixed select list to test for deleted view.
