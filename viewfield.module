@@ -16,6 +16,7 @@ function viewfield_field_info() {
       'label' => t('Views'),
       'description' => t('Displays a selected view in a node.'),
       'settings' => array('allowed_views' => array()),
+      'instance_settings' => array('force_default' => FALSE),
       'default_widget' => 'viewfield_select',
       'default_formatter' => 'viewfield_default',
     ),
@@ -35,6 +36,30 @@ function viewfield_field_settings_form($field, $instance, $has_data) {
     '#description' => t('Only selected views will be available for content authors. Leave empty to allow all.'),
   );
   return $form;
+}
+
+/**
+ * Implements hook_field_instance_settings_form().
+ */
+function viewfield_field_instance_settings_form($field, $instance) {
+  $form['force_default'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Always use default value'),
+    '#default_value' => $instance['settings']['force_default'],
+    '#description' => t('Hides this field in forms and forces the default value defined below.'),
+  );
+  $form['#element_validate'] = array('viewfield_field_instance_settings_form_validate');
+  return $form;
+}
+
+/**
+ * Implements #element_validate for viewfield_field_instance_settings_form().
+ */
+function viewfield_field_instance_settings_form_validate($element, &$form_state) {
+  $field = $form_state['values']['field'];
+  if ($element['force_default']['#value'] && ($field['cardinality'] > 1 || $field['cardinality'] == FIELD_CARDINALITY_UNLIMITED)) {
+    form_error($element['force_default'], t('Multiple views are not supported if force default is enabled.'));
+  }
 }
 
 /**
@@ -96,34 +121,8 @@ function viewfield_field_widget_info() {
     'viewfield_select' => array(
       'label' => 'Select List',
       'field types' => array('viewfield'),
-      'settings' => array('force_default' => FALSE),
     ),
   );
-}
-
-/**
- * Implements hook_field_widget_settings_form().
- */
-function viewfield_field_widget_settings_form($field, $instance) {
-  $form['force_default'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Always use default value'),
-    '#default_value' => $instance['widget']['settings']['force_default'],
-    '#description' => t('Hides this field in forms and forces the default value defined below.'),
-  );
-  $form['#element_validate'] = array('viewfield_field_widget_settings_form_validate');
-  return $form;
-}
-
-/**
- * Implements #element_validate for viewfield_field_widget_settings_form().
- */
-function viewfield_field_widget_settings_form_validate($form, &$form_state) {
-  $field = $form_state['values']['field'];
-  $settings = $form_state['values']['instance']['widget']['settings'];
-  if ($settings['force_default'] && ($field['cardinality'] > 1 || $field['cardinality'] == FIELD_CARDINALITY_UNLIMITED)) {
-    form_set_error('instance][widget][settings][force_default', t('Multiple views are not supported if force default is enabled.'));
-  }
 }
 
 /**
@@ -133,7 +132,7 @@ function viewfield_field_widget_form(&$form, &$form_state, $field, $instance, $l
   $element['#type'] = $instance['widget']['type'];
   // If a stored value exists and we're not forcing a default value, use it as
   // default value.
-  if (isset($items[$delta]) && !$instance['widget']['settings']['force_default']) {
+  if (isset($items[$delta]) && !$instance['settings']['force_default']) {
     $element['#default_value'] = $items[$delta];
   }
   // Otherwise, use the widget's default value, if any.
@@ -171,7 +170,6 @@ function viewfield_select_process($element, &$form_state, $complete_form) {
   $is_field_settings_form = !isset($complete_form['#entity_type']);
   $field = field_widget_field($element, $form_state);
   $instance = field_widget_instance($element, $form_state);
-  $widget = $instance['widget'];
   $element['#field'] = $field;
   // Display the form to let the user pick a view.
   $options = _viewfield_potential_references($field, $instance, $element['#delta']);
@@ -181,7 +179,7 @@ function viewfield_select_process($element, &$form_state, $complete_form) {
     '#options' => $options,
     '#default_value' => isset($element['#default_value']['vname']) ? $element['#default_value']['vname'] : NULL,
     '#required' => $instance['required'],
-    '#access' => $is_field_settings_form || !$widget['settings']['force_default'],
+    '#access' => $is_field_settings_form || !$instance['settings']['force_default'],
     '#description' => $element['#description'],
   );
   // If there is only one option, only show arguments.
@@ -197,7 +195,7 @@ function viewfield_select_process($element, &$form_state, $complete_form) {
       '@value' => $label,
     )),
     '#default_value' => isset($element['#default_value']['vargs']) ? $element['#default_value']['vargs'] : NULL,
-    '#access' => $is_field_settings_form || !$widget['settings']['force_default'],
+    '#access' => $is_field_settings_form || !$instance['settings']['force_default'],
     '#description' => t('A comma separated list of arguments to pass to the selected view. Wrap arguments containing commas in double quotes. Replace double quotes in arguments with two double quotes.'),
   );
   // Provide token help.
@@ -206,7 +204,7 @@ function viewfield_select_process($element, &$form_state, $complete_form) {
       '<br />' . t('Available tokens: any token from the placeholder token list.')
       . '<br />' . t('Note: Using placeholder tokens in combination with the %fields row style may negatively affect site performance.', array('%fields' => t('Fields')));
     // Only show token help for first value or in field settings form.
-    if ($element['#delta'] === 0 && !$widget['settings']['force_default']) {
+    if ($element['#delta'] === 0 && !$instance['settings']['force_default']) {
       $element['token_help'] = array(
         '#type' => 'fieldset',
         '#title' => t('Placeholder tokens'),
