@@ -281,16 +281,6 @@ function viewfield_theme() {
 }
 
 /**
- * Implements hook_views_api().
- */
-function viewfield_views_api() {
-  return array(
-    'api' => 3.0,
-    'path' => drupal_get_path('module', 'viewfield') . '/includes',
-  );
-}
-
-/**
  * Implements hook_content_migrate_instance_alter().
  */
 function viewfield_content_migrate_instance_alter(&$instance_value, $field_value) {

@@ -1,6 +1,8 @@
 
 Viewfield 7.x-2.x, xxxx-xx-xx
 -----------------------------
+#1181226 by sun, keithm, ConradFlashback: Changed to remove
+  viewfield_views_query_alter().
 #1207552 by sun, keithm: Changed to use instance defaults with force_default.
 #1209804 by sun, keithm: Changed force_default from widget to instance settings.
 #311587 by sun, keithm: Fixed force default handling again.

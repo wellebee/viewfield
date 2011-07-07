@@ -11,7 +11,6 @@
 function theme_viewfield_formatter_default($variables) {
   // $_viewfield_stack keeps a record of the current entity to prevent infinite
   // recursion during the view rendering process.
-  // @see viewfield_views_query_alter()
   global $_viewfield_stack;
 
   $item = $variables['item'];
