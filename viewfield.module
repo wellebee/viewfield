@@ -81,6 +81,19 @@ function viewfield_field_is_empty($item, $field) {
 }
 
 /**
+ * Implements hook_field_prepare_view().
+ *
+ * Replace field values with instance defaults when force_default is set.
+ */
+function viewfield_field_prepare_view($entity_type, $entities, $field, $instances, $langcode, &$items) {
+  foreach ($items as $entity_id => &$instance_items) {
+    if ($instances[$entity_id]['settings']['force_default']) {
+      $instance_items = $instances[$entity_id]['default_value'];
+    }
+  }
+}
+
+/**
  * Implements hook_field_formatter_info().
  */
 function viewfield_field_formatter_info() {
@@ -129,19 +142,10 @@ function viewfield_field_widget_info() {
  * Implements hook_field_widget_form().
  */
 function viewfield_field_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
-  $element['#type'] = $instance['widget']['type'];
-  // If a stored value exists and we're not forcing a default value, use it as
-  // default value.
-  if (isset($items[$delta]) && !$instance['settings']['force_default']) {
-    $element['#default_value'] = $items[$delta];
-  }
-  // Otherwise, use the widget's default value, if any.
-  elseif (isset($instance['default_value'][$delta])) {
-    $element['#default_value'] = $instance['default_value'][$delta];
-  }
-  else {
-    $element['#default_value'] = NULL;
-  }
+  $element += array(
+    '#type' => $instance['widget']['type'],
+    '#default_value' => isset($items[$delta]) ? $items[$delta] : NULL,
+  );
 
   return $element;
 }
