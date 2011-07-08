@@ -73,6 +73,13 @@ function viewfield_field($op, &$node, $field, &$items, $teaser, $page) {
         }
       }
       break;
+
+    case 'sanitize':
+      // Replace field values with widget defaults when force_default is set.
+      if ($field['widget']['force_default']) {
+        $items = $field['widget']['default_value'];
+      }
+      break;
   }
 }
 
@@ -136,19 +143,10 @@ function viewfield_widget_settings($op, $widget) {
  * Implementation of hook_widget().
  */
 function viewfield_widget(&$form, &$form_state, $field, $items, $delta = 0) {
-  $element['#type'] = $field['widget']['type'];
-  // If a stored value exists and we're not forcing a default value, use it as
-  // default value.
-  if (isset($items[$delta]) && !$field['widget']['force_default']) {
-    $element['#default_value'] = $items[$delta];
-  }
-  // Otherwise, use the widget's default value, if any.
-  elseif (isset($field['widget']['default_value'])) {
-    $element['#default_value'] = $field['widget']['default_value'][$delta];
-  }
-  else {
-    $element['#default_value'] = NULL;
-  }
+  $element = array(
+    '#type' => $field['widget']['type'],
+    '#default_value' => isset($items[$delta]) ? $items[$delta] : NULL,
+  );
 
   return $element;
 }
