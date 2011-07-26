@@ -9,18 +9,21 @@
  * Return a themed view avoiding viewfield recursion.
  */
 function theme_viewfield_formatter_default($element) {
+  // $_viewfield_stack keeps a record of the current node to prevent infinite
+  // recursion during the view rendering process.
   global $_viewfield_stack;
 
   $node = $element['#node'];
-  // For safety's sake, we can only display 2 levels of viewfields.
-  if (!isset($_viewfield_stack[$node->nid]) && count($_viewfield_stack) <= 2) {
-    list($view_name, $display) = explode('|', $element['#item']['vname'], 2);
-    $view_args = _viewfield_get_view_args($element['#item']['vargs'], $element['#node']);
 
-    // Prevent infinite recursion.
+  if (!empty($element['#item']['vname']) && !isset($_viewfield_stack[$node->nid])) {
+    // Push id of current node unless it's a new node being previewed.
     if ($node->nid) {
       $_viewfield_stack[$node->nid] = $node->nid;
     }
+
+    list($view_name, $display) = explode('|', $element['#item']['vname'], 2);
+    $view_args = _viewfield_get_view_args($element['#item']['vargs'], $element['#node']);
+
 
     // Render the view like Views would do.
     // @see views_embed_view()
