@@ -1,6 +1,7 @@
 
 Viewfield 7.x-2.x, xxxx-xx-xx
 -----------------------------
+#1221440 by sun, keithm: Fixed bogus default value in field widget.
 #1181226 by sun, keithm, ConradFlashback: Changed to remove
   viewfield_views_query_alter().
 #1207552 by sun, keithm: Changed to use instance defaults with force_default.

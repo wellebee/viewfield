@@ -123,13 +123,3 @@ function _viewfield_token_requires_load($text, $entity_type) {
   return FALSE;
 }
 
-function theme_viewfield_select($element) {
-  if (!empty($element['#children'])) {
-    $field = $element['#field'];
-    if ($field['multiple'] && $element['#delta'] == 0) {
-      // This is needed only for multiple viewfields.
-      drupal_add_css(drupal_get_path('module', 'viewfield') . '/theme/viewfield.css');
-    }
-    return '<div class="viewfield-select">' . $element['#children'] . '</div>';
-  }
-}

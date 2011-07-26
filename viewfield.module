@@ -42,6 +42,7 @@ function viewfield_field_settings_form($field, $instance, $has_data) {
  * Implements hook_field_instance_settings_form().
  */
 function viewfield_field_instance_settings_form($field, $instance) {
+  $form['#field_name'] = $field['field_name'];
   $form['force_default'] = array(
     '#type' => 'checkbox',
     '#title' => t('Always use default value'),
@@ -57,8 +58,18 @@ function viewfield_field_instance_settings_form($field, $instance) {
  */
 function viewfield_field_instance_settings_form_validate($element, &$form_state) {
   $field = $form_state['values']['field'];
-  if ($element['force_default']['#value'] && ($field['cardinality'] > 1 || $field['cardinality'] == FIELD_CARDINALITY_UNLIMITED)) {
-    form_error($element['force_default'], t('Multiple views are not supported if force default is enabled.'));
+  $widget_values = $form_state['values'][$element['#field_name']][LANGUAGE_NONE];
+  if ($element['force_default']['#value']) {
+    if ($field['cardinality'] > 1 || $field['cardinality'] == FIELD_CARDINALITY_UNLIMITED) {
+      form_error($element['force_default'], t('%title does not support multiple field values.', array(
+        '%title' => $element['force_default']['#title'],
+      )));
+    }
+    if (empty($widget_values[0]['vname'])) {
+      form_error($element['force_default'], t('%title requires a default value.', array(
+        '%title' => $element['force_default']['#title'],
+      )));
+    }
   }
 }
 
@@ -142,66 +153,46 @@ function viewfield_field_widget_info() {
  * Implements hook_field_widget_form().
  */
 function viewfield_field_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
-  $element += array(
-    '#type' => $instance['widget']['type'],
-    '#default_value' => isset($items[$delta]) ? $items[$delta] : NULL,
-  );
+  // Administrators need to be able to re-configure the default value on the
+  // field edit form if 'force_default' is enabled.
+  // @todo Core: Provide a solid identifier in field_ui_default_value_widget().
+  $is_field_settings_form = FALSE;
+  if (isset($form['#type']) && $form['#type'] == 'fieldset') {
+    $is_field_settings_form = TRUE;
+    $instance['settings']['force_default'] = FALSE;
+  }
 
-  return $element;
-}
-
-/**
- * Implements hook_element_info().
- */
-function viewfield_element_info() {
-  return array(
-    'viewfield_select' => array(
-      '#input' => TRUE,
-      '#columns' => array('vname', 'vargs'),
-      '#delta' => 0,
-      '#process' => array('viewfield_select_process'),
-    ),
-  );
-}
-
-/**
- * Implements #process for viewfield_element_info().
- */
-function viewfield_select_process($element, &$form_state, $complete_form) {
-  // This form is used for both the default value field in the admin as well as
-  // the entity edit form, so we have to make sure we always show the default
-  // value field.
-  $is_field_settings_form = !isset($complete_form['#entity_type']);
-  $field = field_widget_field($element, $form_state);
-  $instance = field_widget_instance($element, $form_state);
-  $element['#field'] = $field;
   // Display the form to let the user pick a view.
   $options = _viewfield_potential_references($field, $instance, $element['#delta']);
   $element['vname'] = array(
     '#type' => 'select',
     '#title' => $element['#title'],
     '#options' => $options,
-    '#default_value' => isset($element['#default_value']['vname']) ? $element['#default_value']['vname'] : NULL,
-    '#required' => $instance['required'],
-    '#access' => $is_field_settings_form || !$instance['settings']['force_default'],
+    '#required' => $element['#required'],
+    '#empty_value' => 0,
+    '#default_value' => isset($items[$delta]['vname']) ? $items[$delta]['vname'] : NULL,
+    '#access' => !$instance['settings']['force_default'],
     '#description' => $element['#description'],
   );
   // If there is only one option, only show arguments.
-  if (count($options) === 1 && !$is_field_settings_form) {
+  $arguments_label = t('Arguments');
+  if (count($options) == 1 && !$is_field_settings_form) {
     list($key, $label) = each($options);
     $element['vname']['#access'] = FALSE;
     $element['vname']['#default_value'] = $key;
+    $arguments_label = t('%field (@value) arguments', array(
+      '%field' => $instance['label'],
+      '@value' => $label,
+    ));
   }
   $element['vargs'] = array(
     '#type' => 'textfield',
-    '#title' => !isset($label) ? t('Arguments') : t('%field (@value) arguments', array(
-      '%field' => $instance['label'],
-      '@value' => $label,
-    )),
-    '#default_value' => isset($element['#default_value']['vargs']) ? $element['#default_value']['vargs'] : NULL,
-    '#access' => $is_field_settings_form || !$instance['settings']['force_default'],
+    '#title' => $arguments_label,
+    '#default_value' => isset($items[$delta]['vargs']) ? $items[$delta]['vargs'] : NULL,
+    '#access' => !$instance['settings']['force_default'],
     '#description' => t('A comma separated list of arguments to pass to the selected view. Wrap arguments containing commas in double quotes. Replace double quotes in arguments with two double quotes.'),
   );
+
   // Provide token help.
   if (module_exists('token')) {
     $element['vargs']['#description'] .=
@@ -230,6 +221,14 @@ function viewfield_select_process($element, &$form_state, $complete_form) {
     . '<br />' . t('Enable the %token module to get a complete listing of replacement tokens.', array('%token' => t('Token')));
   }
 
+  // @todo Core: Fix bogus white-space: nowrap.
+  // @see http://drupal.org/node/1230336
+  $element['#attached']['css'] = array(
+    drupal_get_path('module', 'viewfield') . '/theme/viewfield.css' => array(
+      'weight' => 1,
+    ),
+  );
+
   return $element;
 }
 
@@ -237,25 +236,17 @@ function viewfield_select_process($element, &$form_state, $complete_form) {
  * Prepare a list of views for selection.
  */
 function _viewfield_potential_references($field, $instance, $delta = 0) {
+  // Retrieve all currently available views.
+  $views = views_get_all_views();
+  // Limit to allowed values, if any.
+  if (!empty($field['settings']['allowed_views']) && is_array($field['settings']['allowed_views'])) {
+    $views = array_intersect_key($views, array_filter($field['settings']['allowed_views']));
+  }
   $options = array();
-  $settings = $field['settings'];
-  if (isset($settings['allowed_views']) && is_array($settings['allowed_views'])) {
-    $settings['allowed_views'] = array_filter($settings['allowed_views']);
-  }
-  if (empty($settings['allowed_views'])) {
-    $settings['allowed_views'] = array_keys(views_get_all_views());
-  }
-  foreach ($settings['allowed_views'] as $view_name) {
-    // Check for deleted views saved in allowed_views.
-    if ($view = views_get_view($view_name)) {
-      foreach ($view->display as $display) {
-        $options[$view->name . '|' . $display->id] = $view->name . ' - ' . $display->display_title;
-      }
+  foreach ($views as $view_name => $view) {
+    foreach ($view->display as $display) {
+      $options[$view->name . '|' . $display->id] = $view->name . ' - ' . $display->display_title;
     }
-  }
-  // Add a '0' option for non-required or subsequent values of multiple fields.
-  if (empty($instance['required']) || (($field['cardinality'] > 1 || $field['cardinality'] == FIELD_CARDINALITY_UNLIMITED) && $delta > 0)) {
-    array_unshift($options, '<' . t('none') . '>');
   }
   return $options;
 }
@@ -265,10 +256,6 @@ function _viewfield_potential_references($field, $instance, $delta = 0) {
  */
 function viewfield_theme() {
   return array(
-    'viewfield_select' => array(
-      'render element' => array('element' => NULL),
-      'file' => 'theme/viewfield.theme.inc',
-    ),
     'viewfield_formatter_default' => array(
       'variables' => array(
         'item' => NULL,
