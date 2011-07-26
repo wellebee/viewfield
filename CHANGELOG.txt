@@ -3,6 +3,9 @@ Viewfield x.x-x.x, xxxx-xx-xx
 
 Viewfield 6.x-1.x, xxxx-xx-xx
 -----------------------------
+
+Viewfield 6.x-1.2, 2011-07-26
+-----------------------------
 by keithm: Rolled back #903034 because it breaks views headers/footers.
 #903034 by keithm: Fixed bug producing output for empty view.
 #1048516 by GoZ, keithm: Fixed select list to test for deleted view.
