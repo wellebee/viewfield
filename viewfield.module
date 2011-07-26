@@ -237,7 +237,7 @@ function viewfield_field_widget_form(&$form, &$form_state, $field, $instance, $l
  */
 function _viewfield_potential_references($field, $instance, $delta = 0) {
   // Retrieve all currently available views.
-  $views = views_get_all_views();
+  $views = views_get_enabled_views();
   // Limit to allowed values, if any.
   if (!empty($field['settings']['allowed_views']) && is_array($field['settings']['allowed_views'])) {
     $views = array_intersect_key($views, array_filter($field['settings']['allowed_views']));
