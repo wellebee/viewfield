@@ -3,6 +3,7 @@ Viewfield x.x-x.x, xxxx-xx-xx
 
 Viewfield 6.x-2.x, xxxx-xx-xx
 -----------------------------
+#1181226 by sun, keithm: Changed to remove viewfield_views_query_alter().
 #535494 by keithm: Fixed stack discipline to avoid rendering same view twice.
 #1207552 by keithm: Changed to use widget defaults with force_default.
 #311587 by sun, keithm: Fixed force default handling.
