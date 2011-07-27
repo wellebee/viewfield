@@ -1,6 +1,8 @@
 
 Viewfield 7.x-2.x, xxxx-xx-xx
 -----------------------------
+#1230364 by sun, keithm: Fixed view select in field widget is removed when there
+  is only one option.
 #1230316 by sun: Fixed disabled views can be selected.
 #1221440 by sun, keithm: Fixed bogus default value in field widget.
 #1181226 by sun, keithm, ConradFlashback: Changed to remove

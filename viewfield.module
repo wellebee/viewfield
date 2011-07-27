@@ -174,20 +174,9 @@ function viewfield_field_widget_form(&$form, &$form_state, $field, $instance, $l
     '#access' => !$instance['settings']['force_default'],
     '#description' => $element['#description'],
   );
-  // If there is only one option, only show arguments.
-  $arguments_label = t('Arguments');
-  if (count($options) == 1 && !$is_field_settings_form) {
-    list($key, $label) = each($options);
-    $element['vname']['#access'] = FALSE;
-    $element['vname']['#default_value'] = $key;
-    $arguments_label = t('%field (@value) arguments', array(
-      '%field' => $instance['label'],
-      '@value' => $label,
-    ));
-  }
   $element['vargs'] = array(
     '#type' => 'textfield',
-    '#title' => $arguments_label,
+    '#title' => t('Arguments'),
     '#default_value' => isset($items[$delta]['vargs']) ? $items[$delta]['vargs'] : NULL,
     '#access' => !$instance['settings']['force_default'],
     '#description' => t('A comma separated list of arguments to pass to the selected view. Wrap arguments containing commas in double quotes. Replace double quotes in arguments with two double quotes.'),
