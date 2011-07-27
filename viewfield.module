@@ -27,12 +27,11 @@ function viewfield_field_info() {
  * Implements hook_field_settings_form().
  */
 function viewfield_field_settings_form($field, $instance, $has_data) {
-  $settings = $field['settings'];
   $form['allowed_views'] = array(
     '#type' => 'checkboxes',
     '#title' => t('Allowed values'),
-    '#options' => drupal_map_assoc(array_keys(views_get_all_views())),
-    '#default_value' => isset($settings['allowed_views']) && is_array($settings['allowed_views']) ? $settings['allowed_views'] : array(),
+    '#options' => drupal_map_assoc(array_keys(views_get_enabled_views())),
+    '#default_value' => isset($field['settings']['allowed_views']) && is_array($field['settings']['allowed_views']) ? $field['settings']['allowed_views'] : array(),
     '#description' => t('Only selected views will be available for content authors. Leave empty to allow all.'),
   );
   return $form;
@@ -163,7 +162,7 @@ function viewfield_field_widget_form(&$form, &$form_state, $field, $instance, $l
   }
 
   // Display the form to let the user pick a view.
-  $options = _viewfield_potential_references($field, $instance, $element['#delta']);
+  $options = _viewfield_potential_references($field, $instance);
   $element['vname'] = array(
     '#type' => 'select',
     '#title' => $element['#title'],
@@ -222,14 +221,18 @@ function viewfield_field_widget_form(&$form, &$form_state, $field, $instance, $l
 }
 
 /**
- * Prepare a list of views for selection.
+ * Returns a select options list of views displays of enabled and allowed views.
  */
-function _viewfield_potential_references($field, $instance, $delta = 0) {
+function _viewfield_potential_references($field, $instance) {
   // Retrieve all currently available views.
   $views = views_get_enabled_views();
   // Limit to allowed values, if any.
-  if (!empty($field['settings']['allowed_views']) && is_array($field['settings']['allowed_views'])) {
-    $views = array_intersect_key($views, array_filter($field['settings']['allowed_views']));
+  if (isset($field['settings']['allowed_views']) && is_array($field['settings']['allowed_views'])) {
+    // Only intersect if at least one view has been enabled; otherwise, we would
+    // end up with empty $views.
+    if ($allowed = array_filter($field['settings']['allowed_views'])) {
+      $views = array_intersect_key($views, $allowed);
+    }
   }
   $options = array();
   foreach ($views as $view_name => $view) {
