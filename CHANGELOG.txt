@@ -1,6 +1,7 @@
 
 Viewfield 7.x-2.x, xxxx-xx-xx
 -----------------------------
+#1216684 by sun: Merged include files into .module.
 #1230364 by sun, keithm: Fixed view select in field widget is removed when there
   is only one option.
 #1230316 by sun: Fixed disabled views can be selected.
