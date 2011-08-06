@@ -50,6 +50,8 @@ function viewfield_field_settings_form($field, $instance, $has_data) {
 
 /**
  * Implements hook_field_instance_settings_form().
+ *
+ * @see viewfield_field_instance_settings_form_validate()
  */
 function viewfield_field_instance_settings_form($field, $instance) {
   $form['#field_name'] = $field['field_name'];
@@ -57,24 +59,18 @@ function viewfield_field_instance_settings_form($field, $instance) {
     '#type' => 'checkbox',
     '#title' => t('Always use default value'),
     '#default_value' => $instance['settings']['force_default'],
-    '#description' => t('Hides this field in forms and forces the default value defined below.'),
+    '#description' => t('Hides this field in forms and enforces the configured default value.'),
   );
   $form['#element_validate'] = array('viewfield_field_instance_settings_form_validate');
   return $form;
 }
 
 /**
- * Implements #element_validate for viewfield_field_instance_settings_form().
+ * Form element validation handler for viewfield_field_instance_settings_form().
  */
 function viewfield_field_instance_settings_form_validate($element, &$form_state) {
-  $field = $form_state['values']['field'];
   $widget_values = $form_state['values'][$element['#field_name']][LANGUAGE_NONE];
   if ($element['force_default']['#value']) {
-    if ($field['cardinality'] > 1 || $field['cardinality'] == FIELD_CARDINALITY_UNLIMITED) {
-      form_error($element['force_default'], t('%title does not support multiple field values.', array(
-        '%title' => $element['force_default']['#title'],
-      )));
-    }
     if (empty($widget_values[0]['vname'])) {
       form_error($element['force_default'], t('%title requires a default value.', array(
         '%title' => $element['force_default']['#title'],
