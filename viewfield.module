@@ -6,6 +6,17 @@
  */
 
 /**
+ * Implements hook_theme().
+ */
+function viewfield_theme() {
+  return array(
+    'viewfield_formatter_default' => array(
+      'render element' => 'element',
+    ),
+  );
+}
+
+/**
  * Implements hook_field_info().
  */
 function viewfield_field_info() {
@@ -119,16 +130,25 @@ function viewfield_field_formatter_info() {
  * Implements hook_field_formatter_view().
  */
 function viewfield_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
+  list($entity_id) = entity_extract_ids($entity_type, $entity);
   $elements = array();
   switch ($display['type']) {
     case 'viewfield_default':
       foreach ($items as $delta => $item) {
+        // @todo Store name and display separately.
+        list($view_name, $view_display) = explode('|', $item['vname'], 2);
+        $view = views_get_view($view_name);
+
         $elements[$delta] = array(
-          '#markup' => theme('viewfield_formatter_default', array(
-            'item' => $item,
-            'entity_type' => $entity_type,
-            'entity' => $entity,
-          )),
+          '#type' => 'viewfield',
+          '#access' => $view && $view->access($view_display),
+          '#view' => $view,
+          '#view_name' => $view_name,
+          '#view_display' => $view_display,
+          '#view_arguments' => $item['vargs'],
+          '#entity_type' => $entity_type,
+          '#entity_id' => $entity_id,
+          '#entity' => $entity,
         );
       }
       break;
@@ -137,46 +157,72 @@ function viewfield_field_formatter_view($entity_type, $entity, $field, $instance
 }
 
 /**
- * Return a themed view avoiding viewfield recursion.
+ * Implements hook_element_info().
+ */
+function viewfield_element_info() {
+  $types['viewfield'] = array(
+    '#pre_render' => array('viewfield_pre_render'),
+    '#theme' => 'viewfield_formatter_default',
+    '#post_render' => array('viewfield_post_render'),
+  );
+  return $types;
+}
+
+/**
+ * #pre_render callback for a viewfield field.
+ *
+ * @see viewfield_field_formatter_view()
+ * @see viewfield_post_render()
+ */
+function viewfield_pre_render($element) {
+  $stack = &drupal_static('viewfield_stack', array());
+
+  // Abort rendering in case the view could not be loaded.
+  if (empty($element['#view'])) {
+    // @todo Output an error message?
+    $element['#printed'] = TRUE;
+  }
+  // Abort rendering in case of recursion.
+  elseif (isset($stack[$element['#entity_type']][$element['#entity_id']])) {
+    $element['#printed'] = TRUE;
+  }
+  // Otherwise, add the rendered entity to the stack to prevent recursion.
+  else {
+    $stack[$element['#entity_type']][$element['#entity_id']] = TRUE;
+
+    // Override the view's path to the current path. Otherwise, exposed
+    // views filters would submit to the front page.
+    $element['#view']->override_path = current_path();
+
+    // @todo Store views arguments serialized.
+    $element['#view_arguments'] = _viewfield_get_view_args($element['#view_arguments'], $element['#entity_type'], $element['#entity']);
+  }
+  return $element;
+}
+
+/**
+ * #post_render callback for a viewfield field.
+ *
+ * @see viewfield_pre_render()
+ * @see viewfield_field_formatter_view()
+ */
+function viewfield_post_render($content, $element) {
+  $stack = &drupal_static('viewfield_stack', array());
+
+  unset($stack[$element['#entity_type']][$element['#entity_id']]);
+
+  return $content;
+}
+
+/**
+ * Return HTML for a view in a field.
+ *
+ * @see views_embed_view()
  */
 function theme_viewfield_formatter_default($variables) {
-  // $_viewfield_stack keeps a record of the current entity to prevent infinite
-  // recursion during the view rendering process.
-  global $_viewfield_stack;
+  $element = $variables['element'];
 
-  $item = $variables['item'];
-  $entity_type = $variables['entity_type'];
-  $entity = $variables['entity'];
-  list($entity_id) = entity_extract_ids($entity_type, $entity);
-
-  if (!empty($item['vname']) && !isset($_viewfield_stack[$entity_type][$entity_id])) {
-    // Push id of current entity unless it's a new entity being previewed.
-    if ($entity_id) {
-      $_viewfield_stack[$entity_type][$entity_id] = $entity_id;
-    }
-    list($view_name, $display) = explode('|', $item['vname'], 2);
-    $view_args = _viewfield_get_view_args($item['vargs'], $entity_type, $entity);
-
-    // Render the view like Views would do.
-    // @see views_embed_view()
-    $view = views_get_view($view_name);
-    if ($view && $view->access($display)) {
-      // Override the view's path to the current path. Otherwise, exposed views
-      // filters would submit to the front page.
-      $view->override_path = $_GET['q'];
-
-      $output = $view->preview($display, $view_args);
-    }
-
-    if ($entity_id) {
-      unset($_viewfield_stack[$entity_type][$entity_id]);
-    }
-
-    // Only return an actual view result to not break empty value behavior.
-    if (isset($output)) {
-      return $output;
-    }
-  }
+  return $element['#view']->preview($element['#view_display'], $element['#view_arguments']);
 }
 
 /**
@@ -284,21 +330,6 @@ function _viewfield_potential_references($field, $instance) {
     }
   }
   return $options;
-}
-
-/**
- * Implements hook_theme().
- */
-function viewfield_theme() {
-  return array(
-    'viewfield_formatter_default' => array(
-      'variables' => array(
-        'item' => NULL,
-        'entity_type' => NULL,
-        'entity' => NULL,
-      ),
-    ),
-  );
 }
 
 /**
