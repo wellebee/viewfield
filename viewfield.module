@@ -263,14 +263,12 @@ function viewfield_field_widget_form(&$form, &$form_state, $field, $instance, $l
     '#title' => t('Arguments'),
     '#default_value' => isset($items[$delta]['vargs']) ? $items[$delta]['vargs'] : NULL,
     '#access' => !$instance['settings']['force_default'],
-    '#description' => t('A comma separated list of arguments to pass to the selected view. Wrap arguments containing commas in double quotes. Replace double quotes in arguments with two double quotes.'),
+    '#description' => t('A comma separated list of arguments to pass to the selected view. '),
   );
 
   // Provide token help.
   if (module_exists('token')) {
-    $element['vargs']['#description'] .=
-      '<br />' . t('Available tokens: any token from the placeholder token list.')
-      . '<br />' . t('Note: Using placeholder tokens in combination with the %fields row style may negatively affect site performance.', array('%fields' => t('Fields')));
+    $element['vargs']['#description'] .= t('Any token from the placeholder token list may be used as an argument.');
     // Only show token help for first value or in field settings form.
     if ($element['#delta'] === 0 && !$instance['settings']['force_default']) {
       $element['token_help'] = array(
@@ -287,12 +285,10 @@ function viewfield_field_widget_form(&$form, &$form_state, $field, $instance, $l
     }
   }
   else {
-    $entity_info = entity_get_info($element['#entity_type']);
-    $entity_id_token = '[' . $element['#entity_type'] . ':' . $entity_info['entity keys']['id'] . ']';
-    $element['vargs']['#description'] .=
-    '<br />' . t('You may use %entity-id-token for the id of the current entity.', array('%entity-id-token' => $entity_id_token))
-    . '<br />' . t('Enable the %token module to get a complete listing of replacement tokens.', array('%token' => t('Token')));
+    $element['vargs']['#description'] .= t('Enable the %token module to see a complete list of tokens that may be used as arguments.', array('%token' => t('Token')));
   }
+
+  $element['vargs']['#description'] .= t(' (Wrap arguments containing commas in double quotes and replace double quotes in arguments with a pair of double quotes.)');
 
   // @todo Core: Fix bogus white-space: nowrap.
   // @see http://drupal.org/node/1230336
@@ -333,10 +329,8 @@ function _viewfield_potential_references($field, $instance) {
  */
 function _viewfield_get_view_args($vargs, $entity_type, $entity) {
   $args = array();
-  // Prevent token_replace() from running this function a second time before it
-  // completes the first time.
-  static $replacing_tokens = FALSE;
-  if (!$replacing_tokens && !empty($vargs)) {
+
+  if (!empty($vargs)) {
     $pos = 0;
     while ($pos < strlen($vargs)) {
       $found = FALSE;
@@ -366,41 +360,16 @@ function _viewfield_get_view_args($vargs, $entity_type, $entity) {
       }
     }
 
-    $replacing_tokens = TRUE;
-    $token_data = array($entity_type => $entity);
-    $entity_loaded = FALSE;
+    list($entity_id) = entity_extract_ids($entity_type, $entity);
+    $entities = entity_load($entity_type, array($entity_id));
+    $token_data = array($entity_type => $entities[$entity_id]);
+
     foreach ($args as $key => $value) {
-      // Load the full entity only when required.
-      if (!$entity_loaded && _viewfield_token_requires_load($value, $entity_type)) {
-        list($entity_id) = entity_extract_ids($entity_type, $entity);
-        $entities = entity_load($entity_type, array($entity_id));
-        $token_data = array($entity_type => $entities[$entity_id]);
-        $entity_loaded = TRUE;
-      }
       $args[$key] = token_replace($value, $token_data);
     }
-    $replacing_tokens = FALSE;
   }
-  return $args;
-}
 
-/**
- *  Detect if a token requires a full entity to be loaded.
- *
- *  We conservatively require a load if a token refers to the entity type but
- *  the token key is not the entity id. For example, if the $entity_type == '
- *  node' and $entity_id_key == 'nid', we are searching for tokens of the
- *  form [node:some-key] where some-key != 'nid'.
- *  Global tokens (e.g., [current-user:uid]) never require entity loading.
- */
-function _viewfield_token_requires_load($text, $entity_type) {
-  $entity_info = entity_get_info($entity_type);
-  $entity_id_key = $entity_info['entity keys']['id'];
-  $pattern = '/^\[' . $entity_type . ':(.*)\]$/';
-  if (preg_match($pattern, $text, $matches)) {
-    return ($entity_id_key !== $matches[1]);
-  }
-  return FALSE;
+  return $args;
 }
 
 /**

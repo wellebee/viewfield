@@ -1,6 +1,7 @@
 
 Viewfield 7.x-2.x, xxxx-xx-xx
 -----------------------------
+#1230360 by keithm: Changed to remove custom token support.
 #1230414 by sun: Fixed force_default to be independent of cardinality.
 #1071212 by sun, keithm, imclean: Fixed viewfield rendering and theming support.
 #1216684 by sun: Merged include files into .module.
