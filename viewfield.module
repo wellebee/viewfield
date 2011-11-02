@@ -26,26 +26,14 @@ function viewfield_field_info() {
       // languages due to missing string translation contexts.
       'label' => t('Views'),
       'description' => t('Displays a selected view in a node.'),
-      'settings' => array('allowed_views' => array()),
-      'instance_settings' => array('force_default' => FALSE),
+      'instance_settings' => array(
+        'force_default' => FALSE,
+        'allowed_views' => array(),
+      ),
       'default_widget' => 'viewfield_select',
       'default_formatter' => 'viewfield_default',
     ),
   );
-}
-
-/**
- * Implements hook_field_settings_form().
- */
-function viewfield_field_settings_form($field, $instance, $has_data) {
-  $form['allowed_views'] = array(
-    '#type' => 'checkboxes',
-    '#title' => t('Allowed values'),
-    '#options' => drupal_map_assoc(array_keys(views_get_enabled_views())),
-    '#default_value' => isset($field['settings']['allowed_views']) && is_array($field['settings']['allowed_views']) ? $field['settings']['allowed_views'] : array(),
-    '#description' => t('Only selected views will be available for content authors. Leave empty to allow all.'),
-  );
-  return $form;
 }
 
 /**
@@ -60,6 +48,13 @@ function viewfield_field_instance_settings_form($field, $instance) {
     '#title' => t('Always use default value'),
     '#default_value' => $instance['settings']['force_default'],
     '#description' => t('Hides this field in forms and enforces the configured default value.'),
+  );
+  $form['allowed_views'] = array(
+    '#type' => 'checkboxes',
+    '#title' => t('Allowed values'),
+    '#options' => drupal_map_assoc(array_keys(views_get_enabled_views())),
+    '#default_value' => isset($instance['settings']['allowed_views']) && is_array($instance['settings']['allowed_views']) ? $instance['settings']['allowed_views'] : array(),
+    '#description' => t('Only selected views will be available for content authors. Leave empty to allow all.'),
   );
   $form['#element_validate'] = array('viewfield_field_instance_settings_form_validate');
   return $form;
@@ -308,10 +303,10 @@ function _viewfield_potential_references($field, $instance) {
   // Retrieve all currently available views.
   $views = views_get_enabled_views();
   // Limit to allowed values, if any.
-  if (isset($field['settings']['allowed_views']) && is_array($field['settings']['allowed_views'])) {
+  if (isset($instance['settings']['allowed_views']) && is_array($instance['settings']['allowed_views'])) {
     // Only intersect if at least one view has been enabled; otherwise, we would
     // end up with empty $views.
-    if ($allowed = array_filter($field['settings']['allowed_views'])) {
+    if ($allowed = array_filter($instance['settings']['allowed_views'])) {
       $views = array_intersect_key($views, $allowed);
     }
   }
@@ -373,6 +368,18 @@ function _viewfield_get_view_args($vargs, $entity_type, $entity) {
 }
 
 /**
+ * Implements hook_content_migrate_field_alter().
+ */
+function viewfield_content_migrate_field_alter(&$field_value, $instance_value) {
+    switch ($field_value['type']) {
+      case 'viewfield':
+        // allowed_views is now an instance setting.
+        unset($field_value['settings']['allowed_views']);
+        break;
+    }
+}
+
+/**
  * Implements hook_content_migrate_instance_alter().
  */
 function viewfield_content_migrate_instance_alter(&$instance_value, $field_value) {
@@ -385,12 +392,23 @@ function viewfield_content_migrate_instance_alter(&$instance_value, $field_value
         }
       }
       // Migrate legacy tokens in CCK fields to core tokens in D7 fields.
-      if (isset($instance_value['default_value'])) {
+      if (!empty($instance_value['default_value'])) {
         foreach ($instance_value['default_value'] as $key => $default) {
           if (!empty($default['vargs'])) {
             $instance_value['default_value'][$key]['vargs'] = _viewfield_migrate_legacy_tokens($default['vargs']);
           }
         }
+      }
+      // Migrate force_default from widget to instance settings.
+      // @see viewfield_update_7200()
+      if (isset($instance_value['widget']['settings']['force_default'])) {
+        $instance_value['settings']['force_default'] = $instance_value['widget']['settings']['force_default'];
+        unset($instance_value['widget']['settings']['force_default']);
+      }
+      // Migrate allowed_views from field to instance settings.
+      // @see viewfield_update_7201()
+      if (isset($field_value['settings']['allowed_views'])) {
+        $instance_value['settings']['allowed_views'] = $field_value['settings']['allowed_views'];
       }
       break;
   }

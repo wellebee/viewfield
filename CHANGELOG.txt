@@ -1,6 +1,7 @@
 
 Viewfield 7.x-2.x, xxxx-xx-xx
 -----------------------------
+#1230534 by keithm, sun: Changed allowed_views to be an instance setting.
 #1230360 by keithm: Changed to remove custom token support.
 #1230414 by sun: Fixed force_default to be independent of cardinality.
 #1071212 by sun, keithm, imclean: Fixed viewfield rendering and theming support.
