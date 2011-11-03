@@ -14,6 +14,7 @@ by keithm: Rolled back #903034 because it breaks views headers/footers.
 
 Viewfield 6.x-1.1, 2011-04-27
 -----------------------------
+#1329428 by keithm: Changed for new token_replace() initial string argument.
 #416922 by keithm: Fixed update_6001 to check current size < 128 before update.
 #416922 by frjo, keithm: Fixed vname too short.
 #1052370 by Anclywen: Fixed unrestricted list of allowed views.
