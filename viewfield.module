@@ -250,7 +250,7 @@ function viewfield_select_process($element, $edit, $form_state, $form) {
       '<br />' . $token_description . '; ' . t('or any token from the placeholder token list.')
       . '<br />' . t('Note: Using placeholder tokens in combination with the %fields row style may negatively affect site performance.', array('%fields' => t('Fields')));
     // Only show token help for first value or in field settings form.
-    if ($element['#delta'] == 0 && !$field['widget']['force_default']) {
+    if ($element['#delta'] == 0 && ($is_field_settings_form || !$field['widget']['force_default'])) {
       $element['token_help'] = array(
         '#type' => 'fieldset',
         '#title' => t('Placeholder tokens'),
@@ -366,8 +366,10 @@ function _viewfield_get_view_args($vargs, $node) {
       // If the view field is being loaded as a "view field" of "view row",
       // instead of a simple "node field", the node object is not fully populated:
       // we need a full node to perform a correct replacement.
-      $node_values = node_load($node->nid);
-      $args = token_replace($args, 'node', $node_values);
+      $node = node_load($node->nid);
+      foreach ($args as $key => $text) {
+        $args[$key] = token_replace($text, 'node', $node);
+      }
       $tokens = TRUE;
     }
     // For backwards compatibility, we scan for %nid, etc.
