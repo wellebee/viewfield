@@ -210,7 +210,8 @@ function viewfield_post_render($content, $element) {
  *
  * @see views_embed_view()
  */
-function theme_viewfield_formatter_default($variables) {
+/** @fixme Theme functions should be converted to Twig templates: https://drupal.org/node/1831138 */
+function fixme_theme_viewfield_formatter_default($variables) {
   $element = $variables['element'];
 
   return $element['#view']->preview($element['#view_display'], $element['#view_arguments']);

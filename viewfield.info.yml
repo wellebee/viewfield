@@ -1,0 +1,7 @@
+name: Viewfield
+description: 'Defines a field type to display a view.'
+core: 8.x
+package: Fields
+dependencies:
+  - views
+type: module
