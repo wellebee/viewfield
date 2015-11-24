@@ -86,17 +86,19 @@ class ViewfieldItem extends FieldItemBase {
   * {@inheritdoc}
   */
   public function fieldSettingsForm(array $form, FormStateInterface $form_state) {
-    $element = array();
+    $form = array(
+      '#element_validate' => array(array(get_class($this), 'fieldSettingsFormValidate')),
+    );
     $enabled_views = array_keys(Views::getEnabledViews());
 
-    $element['force_default'] = array(
+    $form['force_default'] = array(
       '#type'          => 'checkbox',
       '#title'         => t('Always use default value'),
       '#default_value' => $this->getSetting('force_default'),
       '#description'   => t('Hides this field in forms and enforces the configured default value. If this is checked, you must provide a default value.'),
     );
 
-    $element['allowed_views'] = array(
+    $form['allowed_views'] = array(
       '#type'          => 'checkboxes',
       '#title'         => t('Allowed values'),
       '#options'       => array_combine($enabled_views, $enabled_views),
@@ -104,7 +106,22 @@ class ViewfieldItem extends FieldItemBase {
       '#description'   => t('Only selected views will be available for content authors. Leave empty to allow all.'),
     );
 
-    $element['#element_validate'] = array('viewfield_field_instance_settings_form_validate');
-    return $element;
+    return $form;
+  }
+
+  /**
+   * Form element validation handler for field instance form.
+   */
+  public static function fieldSettingsFormValidate(array $form, FormStateInterface $form_state) {
+    $form_input = $form_state->getValues();
+    $field_name = $form_input['field']['field_name'];
+    $widget_values = $form_input['default_value_input'][$field_name][0];
+    if ($form['force_default']['#value']) {
+      if (empty($widget_values['vname'])) {
+        $form_state->setErrorByName('default_value_input', t('%title requires a default value.', array(
+          '%title' => $form['force_default']['#title'],
+        )));
+      }
+    }
   }
 }
