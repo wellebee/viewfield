@@ -20,7 +20,7 @@ To submit bug reports and feature suggestions, or to track changes:
 -- REQUIREMENTS --
 
 * Views
-
+* Field
 
 -- INSTALLATION --
 

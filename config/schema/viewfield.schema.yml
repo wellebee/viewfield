@@ -1,0 +1,23 @@
+field.field_settings.viewfield:
+  type: mapping
+  label: 'Viewfield field settings'
+  mapping:
+    force_default:
+      type: boolean
+      label: 'Force a default view'
+    allowed_views:
+      type: sequence
+      label: 'Allowed views'
+      sequence:
+        - type: string
+          label: 'Allowed view'
+field.value.viewfield:
+  type: mapping
+  label: 'Default value'
+  mapping:
+    vname:
+      type: string
+      label: 'Default view name'
+    vargs:
+      type: string
+      label: 'Default view arguments'
