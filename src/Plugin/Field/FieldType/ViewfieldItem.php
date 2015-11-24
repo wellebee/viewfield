@@ -113,11 +113,14 @@ class ViewfieldItem extends FieldItemBase {
    * Form element validation handler for field instance form.
    */
   public static function fieldSettingsFormValidate(array $form, FormStateInterface $form_state) {
-    $form_input = $form_state->getValues();
-    $field_name = $form_input['field']['field_name'];
-    $widget_values = $form_input['default_value_input'][$field_name][0];
-    if ($form['force_default']['#value']) {
-      if (empty($widget_values['vname'])) {
+    $force_default = $form_state->getValue(array('settings', 'force_default'));
+    if ($force_default) {
+      /**
+       * @var \Drupal\Core\Field\FieldConfigBase
+       */
+      $field = $form_state->getFormObject()->getEntity();
+      $default_value_vname = $form_state->getValue(array('default_value_input', $field->getName(), 0, 'vname'));
+      if (empty($default_value_vname)) {
         $form_state->setErrorByName('default_value_input', t('%title requires a default value.', array(
           '%title' => $form['force_default']['#title'],
         )));
