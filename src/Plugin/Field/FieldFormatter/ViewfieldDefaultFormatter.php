@@ -50,7 +50,6 @@ class ViewfieldDefaultFormatter extends FormatterBase {
           'tags' => $view->getCacheTags()
         ],
       );
-      kint($elements);
     }
     return $elements;
   }
