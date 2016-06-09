@@ -46,7 +46,11 @@ class ViewfieldDefaultFormatter extends FormatterBase {
         '#entity_id' => $entity->id(),
         '#entity' => $entity,
         '#theme' => 'viewfield_formatter_default',
+        '#cache' => [
+          'tags' => $view->getCacheTags()
+        ],
       );
+      kint($elements);
     }
     return $elements;
   }
