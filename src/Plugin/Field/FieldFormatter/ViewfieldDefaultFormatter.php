@@ -41,13 +41,15 @@ class ViewfieldDefaultFormatter extends FormatterBase {
         '#access' => $view && $view->access($view_display),
         '#view_name' => $view_name,
         '#view_display' => $view_display,
-        '#view_arguments' => $item->vargs,
+	'#view_arguments' => $item->vargs,
         '#entity_type' => $entity->getEntityTypeId(),
         '#entity_id' => $entity->id(),
         '#entity' => $entity,
         '#theme' => 'viewfield_formatter_default',
       );
     }
+
     return $elements;
   }
 }
+
