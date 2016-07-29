@@ -35,9 +35,11 @@ class ViewfieldDefaultFormatter extends FormatterBase {
       $entity = $item->getEntity();
       list($view_name, $view_display) = explode('|', $item->vname, 2);
       $view = Views::getView($view_name);
+      $build = $view->buildRenderable($view_display, _viewfield_get_view_args($item->vargs, $entity->getEntityTypeId(), $entity));
       $elements[$delta] = array(
         '#type' => 'viewfield',
         '#view' => $view,
+        '#build' => $build,
         '#access' => $view && $view->access($view_display),
         '#view_name' => $view_name,
         '#view_display' => $view_display,

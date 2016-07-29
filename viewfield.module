@@ -24,9 +24,7 @@ function viewfield_theme() {
  */
 function viewfield_preprocess_viewfield_formatter_default(&$variables) {
   $element = $variables['element'];
-  $view_el = $element['#view']->preview($element['#view_display'], array($element['#view_arguments']));
-  $output = render ($view_el);
-  $variables['output'] = $output;
+  $variables['output'] = $element['#build'];
 }
 
 /**
