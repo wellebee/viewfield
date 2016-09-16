@@ -24,6 +24,10 @@ function viewfield_theme() {
  */
 function viewfield_preprocess_viewfield_formatter_default(&$variables) {
   $element = $variables['element'];
-  $view_el = $element['#view']->preview($element['#view_display'], array($element['#view_arguments']));
+  if (isset($element['#view_arguments']) && $element['#view_arguments']) {
+    $view_el = $element['#view']->preview($element['#view_display'], array($element['#view_arguments']));
+  } else {
+    $view_el = $element['#view']->preview($element['#view_display']);
+  }
   $variables['output'] = $view_el;
 }
