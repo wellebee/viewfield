@@ -24,5 +24,10 @@ function viewfield_theme() {
  */
 function viewfield_preprocess_viewfield_formatter_default(&$variables) {
   $element = $variables['element'];
-  $variables['output'] = $element['#build'];
+  if (!empty($element['#view_arguments'])) {
+    $variables['output'] = $element['#view']->buildRenderable($element['#view_display'], array($element['#view_arguments']));
+  }
+  else {
+    $variables['output'] = $element['#view']->buildRenderable($element['#view_display']);
+  }
 }
