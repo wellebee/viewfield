@@ -38,7 +38,7 @@ class ViewfieldWidget extends WidgetBase {
     $field_settings = $this->getFieldSettings();
     $options = $this->getPotentialReferences($field_settings);
 
-    $id = Html::getUniqueId('state-wrapper-' .$items->getName() . '-' . $delta);
+    $id = Html::getUniqueId('state-wrapper-' . $items->getName() . '-' . $delta);
 
     $element['#field_name'] = $items->getName();
     $element['vname'] = array(
