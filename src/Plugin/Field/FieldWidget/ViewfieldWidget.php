@@ -105,12 +105,16 @@ class ViewfieldWidget extends WidgetBase {
    */
   public function getViewSettings($view, $display, $settings) {
     $form_state = new FormState();
-    $form_state->setUserInput($settings);
+    if ($settings) {
+      $form_state->setUserInput($settings);
+    }
     $view->initHandlers();
     $form = [];
     // Let form plugins know this is for exposed widgets.
     $form_state->set('exposed', TRUE);
     $form['settings'] = [];
+
+
 
     // Go through each handler and let it generate its exposed widget.
     foreach ($view->display_handler->handlers as $type => $value) {
@@ -145,6 +149,7 @@ class ViewfieldWidget extends WidgetBase {
 
     $exposed_form_plugin = $view->display_handler->getPlugin('exposed_form');
     $exposed_form_plugin->exposedFormAlter($form, $form_state);
+
 
     unset($form['actions']);
     return $form;
@@ -192,8 +197,11 @@ class ViewfieldWidget extends WidgetBase {
 
   public function getView($view_id, $display) {
     $view = Views::getView($view_id);
-    $view->setDisplay($display);
-    return $view;
+    if ($view) {
+      $view->setDisplay($display);
+      return $view;
+    }
+    return false;
   }
 
   public function extractFormValues(FieldItemListInterface $items, array $form, FormStateInterface $form_state) {
