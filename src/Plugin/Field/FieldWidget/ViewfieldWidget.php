@@ -114,8 +114,6 @@ class ViewfieldWidget extends WidgetBase {
     $form_state->set('exposed', TRUE);
     $form['settings'] = [];
 
-
-
     // Go through each handler and let it generate its exposed widget.
     foreach ($view->display_handler->handlers as $type => $value) {
       /** @var \Drupal\views\Plugin\views\ViewsHandlerInterface $handler */
@@ -150,7 +148,6 @@ class ViewfieldWidget extends WidgetBase {
     $exposed_form_plugin = $view->display_handler->getPlugin('exposed_form');
     $exposed_form_plugin->exposedFormAlter($form, $form_state);
 
-
     unset($form['actions']);
     return $form;
   }
@@ -159,7 +156,7 @@ class ViewfieldWidget extends WidgetBase {
     $view = $form_state->getTriggeringElement()['#value'];
     $view = explode('|', $view);
     $viewInstance = $this->getView($view[0], $view[1]);
-    if ($viewInstance) {
+    if ($viewInstance && is_a($viewInstance->getDisplay(), 'Drupal\viewfield\Plugin\views\display\ViewFieldDisplay')) {
       return $this->getViewSettings($viewInstance, $view[1]);
     }
     return [];
@@ -195,45 +192,31 @@ class ViewfieldWidget extends WidgetBase {
     return $options;
   }
 
-  public function getView($view_id, $display) {
-    $view = Views::getView($view_id);
+  /**
+   * Helper function for retrieve view.
+   *
+   * @param string $viewId
+   *   View machinable name to load.
+   * @param string $display
+   *   Display plugin to load.
+   */
+  public function getView($viewId, $display) {
+    $view = Views::getView($viewId);
     if ($view) {
       $view->setDisplay($display);
       return $view;
     }
-    return false;
+    return FALSE;
   }
 
-  public function extractFormValues(FieldItemListInterface $items, array $form, FormStateInterface $form_state) {
-    // dsm($form_state->getValues());
-    // dsm($form_state->getValues(),'Settings');
-    parent::extractFormValues($items, $form, $form_state);
-    $field_name = $this->fieldDefinition->getName();
-    $path = array_merge($form['#parents'], array($field_name));
-    $key_exists = NULL;
-    $values = NestedArray::getValue($form_state->getValues(), $path, $key_exists);
-    if ($key_exists) {
-      if (!$this->handlesMultipleValues()) {
-        // Remove the 'value' of the 'add more' button.
-        unset($values['add_more']);
-        // The original delta, before drag-and-drop reordering, is needed to
-        // route errors to the correct form element.
-        foreach ($values as $delta => &$value) {
-          $value['_original_delta'] = $delta;
-        }
-        usort($values, function($a, $b) {
-          return SortArray::sortByKeyInt($a, $b, '_weight');
-        });
-      }
-      // Let the widget massage the submitted values.
-      $values = $this->massageFormValues($values, $form, $form_state);
-      foreach ($values as $delta => $value) {
-        if ($value['settings_wrapper']['settings_wrapper_form']['settings']) {
-          $values[$delta]['settings'] = Json::encode($value['settings_wrapper']['settings_wrapper_form']['settings']);
-        }
-      }
-      $items->setValue($values);
+  /**
+   * {@inheritdoc}
+   */
+  public function massageFormValues(array $values, array $form, FormStateInterface $formState) {
+    foreach ($values as $key => $value) {
+      $values[$key]['settings'] = Json::encode($value['settings_wrapper']['settings_wrapper_form']['settings']);
     }
+    return $values;
   }
 
 }
