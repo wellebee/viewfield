@@ -1,11 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\viewfield\Plugin\Field\FieldFormatter\ViewfieldDefaultFormatter.
- */
-
-
 namespace Drupal\viewfield\Plugin\Field\FieldFormatter;
 
 use Drupal\Core\Field\FormatterBase;
@@ -50,4 +44,5 @@ class ViewfieldDefaultFormatter extends FormatterBase {
     }
     return $elements;
   }
+
 }

@@ -1,16 +1,10 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\viewfield\Plugin\Field\FieldWidget\ViewfieldWidget.
- */
-
 namespace Drupal\viewfield\Plugin\Field\FieldWidget;
 
 use Drupal\Core\Field\WidgetBase;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Render\Element;
 use Drupal\views\Views;
 
 /**
@@ -25,7 +19,6 @@ use Drupal\views\Views;
  * )
  */
 class ViewfieldWidget extends WidgetBase {
-
 
   /**
    * {@inheritdoc}
@@ -48,17 +41,17 @@ class ViewfieldWidget extends WidgetBase {
       '#title' => t('Arguments'),
       '#default_value' => isset($items[$delta]->vargs) ? $items[$delta]->vargs : NULL,
       '#access' => !$field_settings['force_default'],
-      '#description' => t('A comma separated list of arguments to pass to the selected view. '),
+      '#description' => t('A comma separated list of arguments to pass to the selected view.'),
     );
 
     return $element;
   }
 
   /**
-   * Returns a select options list of views displays of enabled and allowed views.
+   * Returns a select options list of enabled and allowed views displays.
    *
-   * @param array @settings
-   *   The field settings
+   * @param array $settings
+   *   The field settings.
    *
    * @return array
    *   An array with the allowed and enabled views and displays.
@@ -68,8 +61,8 @@ class ViewfieldWidget extends WidgetBase {
     $views = Views::getEnabledViews();
     // Limit to allowed values, if any.
     if (isset($settings['allowed_views']) && is_array($settings['allowed_views'])) {
-      // Only intersect if at least one view has been enabled; otherwise, we would
-      // end up with empty $views.
+      // Only intersect if at least one view has been enabled; otherwise, we
+      // would end up with empty $views.
       if ($allowed = array_filter($settings['allowed_views'])) {
         $views = array_intersect_key($views, $allowed);
       }
