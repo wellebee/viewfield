@@ -24,7 +24,15 @@ function viewfield_theme() {
  */
 function viewfield_preprocess_viewfield_formatter_default(&$variables) {
   $element = $variables['element'];
-  $view_el = $element['#view']->preview($element['#view_display'], array($element['#view_arguments']));
+
+  if (!empty($element['#view_arguments'])) {
+    // Use direct user input from Arguments field.
+    $view_el = $element['#view']->preview($element['#view_display'], array($element['#view_arguments']));
+  }
+  else {
+    // Allow to use contextual filters set in view.
+    $view_el = $element['#view']->preview($element['#view_display']);
+  }
   $output = render ($view_el);
   $variables['output'] = $output;
 }
