@@ -1,12 +1,11 @@
 <?php
 
-use \Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Url;
-
 /**
  * @file
  * Defines a field type to display a view.
  */
+
+use Drupal\Core\Url;
 
 /**
  * Implements hook_theme().
@@ -33,7 +32,7 @@ function viewfield_preprocess_viewfield_formatter_default(&$variables) {
     // Allow to use contextual filters set in view.
     $view_el = $element['#view']->preview($element['#view_display']);
   }
-  $output = render ($view_el);
+  $output = render($view_el);
   $variables['output'] = $output;
 }
 
@@ -50,7 +49,7 @@ function viewfield_element_info() {
 }
 
 /**
- * #pre_render callback for a viewfield field.
+ * Used as a #pre_render callback for a viewfield field.
  *
  * @see viewfield_post_render()
  */
@@ -83,7 +82,7 @@ function viewfield_pre_render($element) {
 }
 
 /**
- * #post_render callback for a viewfield field.
+ * Used as a #post_render callback for a viewfield field.
  *
  * @see viewfield_pre_render()
  */
@@ -93,9 +92,8 @@ function viewfield_post_render($content, $element) {
   return $content;
 }
 
-
 /**
- * Perform argument replacement
+ * Perform argument replacement.
  */
 function _viewfield_get_view_args($vargs, $entity_type, $entity) {
   $args = array();
@@ -120,7 +118,7 @@ function _viewfield_get_view_args($vargs, $entity_type, $entity) {
       elseif (($comma = strpos($vargs, ',', $pos)) !== FALSE) {
         // Otherwise, get everything before next comma.
         $args[] = substr($vargs, $pos, $comma - $pos);
-        // Skip to after comma and repeat
+        // Skip to after comma and repeat.
         $pos = $comma + 1;
         $found = TRUE;
       }

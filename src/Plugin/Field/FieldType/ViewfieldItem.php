@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\viewfield\Plugin\Field\FieldType\ViewfieldItem.
- */
-
 namespace Drupal\viewfield\Plugin\Field\FieldType;
 
 use Drupal\Core\TypedData\DataDefinition;
@@ -12,7 +7,6 @@ use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Field\FieldItemBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\views\Views;
-
 
 /**
  * Plugin implementation of the 'viewfield' field type.
@@ -27,7 +21,7 @@ use Drupal\views\Views;
  */
 class ViewfieldItem extends FieldItemBase {
 
-  static $propertyDefinitions;
+  public static $propertyDefinitions;
 
   /**
    * {@inheritdoc}
@@ -36,7 +30,6 @@ class ViewfieldItem extends FieldItemBase {
     $value = $this->get('vname')->getValue();
     return empty($value);
   }
-
 
   /**
    * {@inheritdoc}
@@ -48,7 +41,6 @@ class ViewfieldItem extends FieldItemBase {
     ) + parent::defaultFieldSettings();
   }
 
-
   /**
    * {@inheritdoc}
    */
@@ -58,14 +50,16 @@ class ViewfieldItem extends FieldItemBase {
         'vname' => array(
           'type' => 'varchar',
           'not null' => FALSE,
-          // Views requires at least 96 chars for the view name and display, plus
-          // we need 1 for our delimiter. Round up to a common value of 128.
+          // Views requires at least 96 chars for the view name and display,
+          // plus we need 1 for our delimiter. Round up to a common value of
+          // 128.
           'length' => 128,
         ),
         'vargs' => array(
           'type' => 'varchar',
           'not null' => FALSE,
-          'length' => 255, //viewfield_field_instance_settings_form_validate
+          // Note: viewfield_field_instance_settings_form_validate.
+          'length' => 255,
         ),
       ),
     );
@@ -82,9 +76,9 @@ class ViewfieldItem extends FieldItemBase {
     return $properties;
   }
 
- /**
-  * {@inheritdoc}
-  */
+  /**
+   * {@inheritdoc}
+   */
   public function fieldSettingsForm(array $form, FormStateInterface $form_state) {
     $form = array(
       '#element_validate' => array(array(get_class($this), 'fieldSettingsFormValidate')),
@@ -115,11 +109,14 @@ class ViewfieldItem extends FieldItemBase {
   public static function fieldSettingsFormValidate(array $form, FormStateInterface $form_state) {
     $force_default = $form_state->getValue(array('settings', 'force_default'));
     if ($force_default) {
-      /**
-       * @var \Drupal\Core\Field\FieldConfigBase
-       */
+      // The $field is of type \Drupal\Core\Field\FieldConfigBase.
       $field = $form_state->getFormObject()->getEntity();
-      $default_value_vname = $form_state->getValue(array('default_value_input', $field->getName(), 0, 'vname'));
+      $default_value_vname = $form_state->getValue(array(
+        'default_value_input',
+        $field->getName(),
+        0,
+        'vname',
+      ));
       if (empty($default_value_vname)) {
         $form_state->setErrorByName('default_value_input', t('%title requires a default value.', array(
           '%title' => $form['force_default']['#title'],
@@ -127,4 +124,5 @@ class ViewfieldItem extends FieldItemBase {
       }
     }
   }
+
 }

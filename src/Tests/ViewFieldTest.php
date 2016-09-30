@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains Drupal\viewfield\Tests\ViewFieldTest.
- */
-
 namespace Drupal\viewfield\Tests;
 
 use Drupal\Component\Utility\Unicode;
@@ -38,6 +33,9 @@ class ViewFieldTest extends WebTestBase {
    */
   protected $field;
 
+  /**
+   * Set up the test.
+   */
   protected function setUp() {
     parent::setUp();
 
@@ -52,7 +50,7 @@ class ViewFieldTest extends WebTestBase {
   /**
    * Test field creation and attachment to an article.
    */
-  function testFieldCreation() {
+  public function testFieldCreation() {
     $field_name = Unicode::strtolower($this->randomMachineName());
     // Create a field with settings to validate.
     $this->fieldStorage = entity_create('field_storage_config', array(
@@ -87,19 +85,25 @@ class ViewFieldTest extends WebTestBase {
     $this->assertViewDisplays($field_name);
   }
 
+  /**
+   * Assert that the node was created.
+   *
+   * @param string $field_name
+   *   A name of the field.
+   */
   protected function assertNodeCreated($field_name) {
     // Display article creation form.
     $this->drupalGet('node/add/article');
     $view_select_name = "{$field_name}[0][vname]";
-    $this->assertFieldByName($view_select_name, NULL,'Views select list is displayed.');
-    $this->assertFieldByName("{$field_name}[0][vargs]", '' ,
+    $this->assertFieldByName($view_select_name, NULL, 'Views select list is displayed.');
+    $this->assertFieldByName("{$field_name}[0][vargs]", '',
       'Views arguments text field is displayed');
 
-    $edit = array (
+    $edit = array(
       "title[0][value]" => 'Test',
       $view_select_name => 'user_admin_people|default',
     );
-    // create article with viewfield
+    // Create article with viewfield.
     $this->drupalPostForm(NULL, $edit, t('Save and publish'));
     $this->assertText(t('Article Test has been created.'));
   }
@@ -108,37 +112,40 @@ class ViewFieldTest extends WebTestBase {
    * Assert that the view is displayed on a node.
    *
    * @param string $field_name
-   *   The field to test
+   *   The field to test.
    */
   protected function assertViewDisplays($field_name) {
-    // create article
+    // Create article.
     $this->drupalGet('node/add/article');
     $view_select_name = "{$field_name}[0][vname]";
-    $edit = array (
+    $edit = array(
       "title[0][value]" => 'Test1',
       $view_select_name => 'user_admin_people|default',
     );
     $this->drupalPostForm(NULL, $edit, t('Save and publish'));
-    
-    // test that the view displays on the node
+
+    // Test that the view displays on the node.
     $elements = $this->xpath("//div[contains(@class,:class) and contains(@class,:class1)]",
-      array(':class' => 'view-user-admin-people',':class1' => 'view-display-id-default'));
+      array(':class' => 'view-user-admin-people', ':class1' => 'view-display-id-default'));
     $this->assertTrue(!empty($elements), 'Node contains the correct view and display.');
-    $elements = $this->xpath("//a[@href=:href]",array(':href' => '/user/1'));
+    $elements = $this->xpath("//a[@href=:href]", array(':href' => '/user/1'));
     $this->assertTrue(!empty($elements), 'View is displaying the content.');
   }
 
   /**
-   * Assert that a default view is required when default value checkbox is checked.
+   * Assert for a default view  when default value checkbox is checked.
+   *
+   * Assert that a default view is required when default value checkbox is
+   * checked.
    *
    * @param string $field_name
-   *   The field to test
+   *   The field to test.
    */
   protected function assertDefaultViewRequired($field_name) {
     $this->drupalGet("admin/structure/types/manage/article/fields/node.article.{$field_name}");
     $default_chk_name = 'field[settings][force_default]';
-    $this->assertFieldByName($default_chk_name, NULL,'Default value checkbox displayed');
-    $edit = array (
+    $this->assertFieldByName($default_chk_name, NULL, 'Default value checkbox displayed');
+    $edit = array(
       $default_chk_name => TRUE,
     );
     $this->drupalPostForm(NULL, $edit, t('Save settings'));
@@ -149,30 +156,30 @@ class ViewFieldTest extends WebTestBase {
    * Assert that the default view is selected on the node add form.
    *
    * @param string $field_name
-   *   The field to test
+   *   The field to test.
    */
   protected function assertDefaultViewSelected($field_name) {
     $this->drupalGet("admin/structure/types/manage/article/fields/node.article.{$field_name}");
     $default_view_select_name = "default_value_input[{$field_name}][0][vname]";
-    $this->assertFieldByName($default_view_select_name, NULL,'Default view select list is displayed');
-    $edit = array (
+    $this->assertFieldByName($default_view_select_name, NULL, 'Default view select list is displayed');
+    $edit = array(
       $default_view_select_name => 'user_admin_people|default',
     );
     $this->drupalPostForm(NULL, $edit, t('Save settings'));
     $this->assertText("Saved {$field_name} configuration");
 
-    // check that the view is preselected on the node form
+    // Check that the view is preselected on the node form.
     $this->drupalGet('node/add/article');
     $view_select_name = "{$field_name}[0][vname]";
 
-    $this->assertFieldByName($view_select_name, 'user_admin_people|default','Views select list is displayed with correct value');
+    $this->assertFieldByName($view_select_name, 'user_admin_people|default', 'Views select list is displayed with correct value');
 
-    // return the default value to its original state
+    // Return the default value to its original state.
     $this->drupalGet("admin/structure/types/manage/article/fields/node.article.{$field_name}");
-    $edit = array (
+    $edit = array(
       $default_view_select_name => '0',
     );
     $this->drupalPostForm(NULL, $edit, t('Save settings'));
-
   }
+
 }
