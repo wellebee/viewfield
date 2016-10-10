@@ -77,7 +77,7 @@ class ViewFieldTest extends WebTestBase {
       ->save();
     entity_get_display('node', 'article', 'full')
       ->setComponent($field_name, array(
-        'type' => 'viewfield_default',
+        'type' => 'viewfield_formatter',
       ))
       ->save();
 

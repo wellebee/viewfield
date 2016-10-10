@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\viewfield\Plugin\Field\FieldFormatter\ViewfieldDefaultFormatter.
+ * Contains \Drupal\viewfield\Plugin\Field\FieldFormatter\ViewfieldFormatter.
  */
 
 
@@ -14,17 +14,17 @@ use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\views\Views;
 
 /**
- * Plugin implementation of the 'viewfield_default' formatter.
+ * Plugin implementation of the 'viewfield_formatter' formatter.
  *
  * @FieldFormatter(
- *   id = "viewfield_default",
- *   label = @Translation("Viewfield default formatter"),
+ *   id = "viewfield_formatter",
+ *   label = @Translation("Viewfield formatter"),
  *   field_types = {
  *     "viewfield"
  *   }
  * )
  */
-class ViewfieldDefaultFormatter extends FormatterBase {
+class ViewfieldFormatter extends FormatterBase {
 
   /**
    * {@inheritdoc}
