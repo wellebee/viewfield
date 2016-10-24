@@ -22,7 +22,7 @@ use Drupal\views\Views;
  *   label = @Translation("Viewfield"),
  *   description = @Translation("Viewfield field type. Stores view name and arguments."),
  *   default_widget = "viewfield_select",
- *   default_formatter = "viewfield_default"
+ *   default_formatter = "viewfield_formatter"
  * )
  */
 class ViewfieldItem extends FieldItemBase {
