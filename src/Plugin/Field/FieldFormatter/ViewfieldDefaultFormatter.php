@@ -36,6 +36,7 @@ class ViewfieldDefaultFormatter extends FormatterBase {
       $entity = $item->getEntity();
       list($view_name, $view_display) = explode('|', $item->vname, 2);
       $view = Views::getView($view_name);
+      $settings = [];
       if (!empty($item->settings)) {
         $settings = Json::decode($item->settings);
       }

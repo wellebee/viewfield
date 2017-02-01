@@ -11,11 +11,10 @@ use Drupal\Core\Field\WidgetBase;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\FormState;
+use Drupal\Core\Render\Element;
 use Drupal\Component\Utility\Html;
-use Drupal\Component\Serialization\Json;
-use Drupal\Component\Utility\NestedArray;
-use Drupal\Component\Utility\SortArray;
 use Drupal\views\Views;
+use Drupal\Component\Serialization\Json;
 
 /**
  * Plugin implementation of the 'viewfield' widget.
@@ -132,16 +131,18 @@ class ViewfieldWidget extends WidgetBase {
         }
       }
     }
-
-    foreach ($settings as $name => $set) {
-      if ($form[$name]) {
-        $form[$name]['#default_value'] = $set;
+    if (!empty($settings)) {
+      foreach ($settings as $name => $set) {
+        if ($form[$name]) {
+          $form[$name]['#default_value'] = $set;
+        }
       }
     }
-
-    foreach ($form['#info'] as $info) {
-      if (isset($form[$info['value']])) {
-        $form[$info['value']]['#title'] = $info['label'];
+    if (isset($form['#info'])) {
+      foreach ($form['#info'] as $info) {
+        if (isset($form[$info['value']])) {
+          $form[$info['value']]['#title'] = $info['label'];
+        }
       }
     }
 

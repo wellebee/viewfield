@@ -66,7 +66,7 @@ class ViewfieldItem extends FieldItemBase {
         ),
         'settings' => array(
           'type' => 'text',
-          'size' => 'big',
+          'size' => 'normal',
         ),
       ),
     );
