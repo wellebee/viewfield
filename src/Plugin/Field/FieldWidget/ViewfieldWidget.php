@@ -78,7 +78,7 @@ class ViewfieldWidget extends WidgetBase {
     foreach ($views as $view_name => $view) {
       $displays = $view->get('display');
       foreach ($displays as $display) {
-        $options[$view->id() . '|' . $display['id']] = $view->id() . ' - ' . $display['display_title'];
+        $options[$view->label()][$view->id() . '|' . $display['id']] = $view->label() . ' - ' . $display['display_title'];
       }
     }
     return $options;
