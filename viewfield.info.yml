@@ -1,0 +1,8 @@
+name: Viewfield
+type: module
+description: 'Defines a Views display type for an entity reference field.'
+version: VERSION
+core: 8.x
+dependencies:
+  - views
+  - field

@@ -1,0 +1,10 @@
+{
+  "name": "drupal/viewfield",
+  "description": "Defines a field type to reference a Views display.",
+  "type": "drupal-module",
+  "homepage": "http://drupal.org/project/viewfield",
+  "support": {
+    "issues": "https://www.drupal.org/project/issues/viewfield"
+  },
+  "license": "GPL-2.0+",
+}
