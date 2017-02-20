@@ -40,11 +40,13 @@ class ViewfieldWidgetSelect extends OptionsSelectWidget {
 
     // Set up options for allowed views.
     $element['target_id']['#multiple'] = FALSE;
+    // Always allow '_none' for non-required fields or second and greater delta.
+    $views_options = (!$this->fieldDefinition->isRequired() || $delta > 0) ? array('_none' => '- None -') : array();
     $allowed_views_options = array_intersect_key(ViewfieldItem::getViewsOptions(), array_filter($items->getSetting('allowed_views')));
-    if (!empty($allowed_views_options)) {
-      $views_options = !$this->fieldDefinition->isRequired() ? array('_none' => '- None -') : array();
-      $element['target_id']['#options'] = array_merge($views_options, $allowed_views_options);
+    if (empty($allowed_views_options)) {
+      $allowed_views_options = $element['target_id']['#options'];
     }
+    $element['target_id']['#options'] = array_merge($views_options, $allowed_views_options);
 
     // Build an array of keys to retrieve values from $form_state.
     $form_state_keys = array($items->getName(), $delta);
