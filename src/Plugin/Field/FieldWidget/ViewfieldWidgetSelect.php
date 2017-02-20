@@ -119,6 +119,37 @@ class ViewfieldWidgetSelect extends OptionsSelectWidget {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  protected function formMultipleElements(FieldItemListInterface $items, array &$form, FormStateInterface $form_state) {
+    $elements = parent::formMultipleElements($items, $form, $form_state);
+
+    $is_multiple = $elements['#cardinality_multiple'];
+    $max_delta = $elements['#max_delta'];
+    for ($delta = 0; $delta <= $max_delta; $delta++) {
+      $element = &$elements[$delta];
+      // Change title to 'View #' for multiple values, 'View' for single value.
+      if ($is_multiple) {
+        $element['target_id']['#title'] = $this->t('View @number', array('@number' => $delta + 1));
+        // Force title display.
+        $element['target_id']['#title_display'] = 'before';
+      }
+      else {
+        $element['target_id']['#title'] = $this->t('View');
+        // Wrap single values in a fieldset unless on the default settings form.
+        if (!$this->isDefaultValueWidget($form_state)) {
+          $element += array(
+            '#type' => 'fieldset',
+            '#title' => $this->fieldDefinition->getLabel(),
+          );
+        }
+      }
+    }
+
+    return $elements;
+  }
+
+  /**
    * Overridden form validation handler for widget elements.
    *
    * Save selected value as a single item, since there will be at most one.
