@@ -5,6 +5,7 @@ namespace Drupal\viewfield\Plugin\Field\FieldWidget;
 use Drupal\Core\Field\Plugin\Field\FieldWidget\OptionsSelectWidget;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\viewfield\Plugin\Field\FieldType\ViewfieldItem;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\HtmlCommand;
 use Drupal\views\Views;
@@ -39,7 +40,7 @@ class ViewfieldWidgetSelect extends OptionsSelectWidget {
 
     // Set up options for allowed views.
     $element['target_id']['#multiple'] = FALSE;
-    $allowed_views_options = array_filter($items->getSetting('allowed_views'));
+    $allowed_views_options = array_intersect_key(ViewfieldItem::getViewsOptions(), array_filter($items->getSetting('allowed_views')));
     if (!empty($allowed_views_options)) {
       $views_options = !$this->fieldDefinition->isRequired() ? array('_none' => '- None -') : array();
       $element['target_id']['#options'] = array_merge($views_options, $allowed_views_options);
@@ -207,17 +208,18 @@ class ViewfieldWidgetSelect extends OptionsSelectWidget {
    */
   protected function getViewDisplayOptions($entity_id) {
     $views = Views::getEnabledViews();
-    $options = array();
+    $view_display_options = array();
     if (isset($views[$entity_id])) {
       $allowed_display_types = array_filter($this->getFieldSetting('allowed_display_types'));
       foreach ($views[$entity_id]->get('display') as $display_id => $display) {
         if (empty($allowed_display_types) || isset($allowed_display_types[$display['display_plugin']])) {
-          $options[$display_id] = $display['display_title'];
+          $view_display_options[$display_id] = $display['display_title'];
         }
       }
+      natcasesort($view_display_options);
     }
 
-    return $options;
+    return $view_display_options;
   }
 
   /**

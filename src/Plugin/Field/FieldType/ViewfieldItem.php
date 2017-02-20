@@ -106,31 +106,17 @@ class ViewfieldItem extends EntityReferenceItem {
       '#description'   => $this->t('Hides this field in forms and enforces the configured default value for all entities in the bundle, making it unnecessary to assign values individually to each one.<br>If this is checked, you must provide a default value.'),
     );
 
-    $allowed_views_options = array();
-    foreach (Views::getEnabledViews() as $key => $view) {
-      $allowed_views_options[$key] = $view->get('label');
-    }
-    natcasesort($allowed_views_options);
-
     $form['allowed_views'] = array(
       '#type' => 'checkboxes',
-      '#options' => $allowed_views_options,
+      '#options' => self::getViewsOptions(),
       '#title' => $this->t('Allowed views'),
       '#default_value' => $this->getSetting('allowed_views') ?: $default_settings['allowed_views'],
       '#description'   => $this->t('Views available for content authors. Leave empty to allow all.'),
     );
 
-    $allowed_display_types_options = array();
-    foreach (Views::pluginList() as $key => $type) {
-      if ($type['type'] == 'display') {
-        $allowed_display_types_options[str_replace('display:', '', $key)] = $type['title']->render();
-      }
-    }
-    natcasesort($allowed_display_types_options);
-
     $form['allowed_display_types'] = array(
       '#type' => 'checkboxes',
-      '#options' => $allowed_display_types_options,
+      '#options' => self::getDisplayTypeOptions(),
       '#title' => $this->t('Allowed display types'),
       '#default_value' => $this->getSetting('allowed_display_types') ?: $default_settings['allowed_display_types'],
       '#description'   => $this->t('Display types available for content authors. Leave empty to allow all.'),
@@ -161,5 +147,39 @@ class ViewfieldItem extends EntityReferenceItem {
         )));
       }
     }
+  }
+
+  /**
+   * Get an options array of all enabled Views.
+   *
+   * @return array
+   *   The array of options.
+   */
+  public static function getViewsOptions() {
+    $views_options = array();
+    foreach (Views::getEnabledViews() as $key => $view) {
+      $views_options[$key] = $view->get('label');
+    }
+    natcasesort($views_options);
+
+    return $views_options;
+  }
+
+  /**
+   * Get an options array of all Views display types.
+   *
+   * @return array
+   *   The array of options.
+   */
+  public static function getDisplayTypeOptions() {
+    $display_type_options = array();
+    foreach (Views::pluginList() as $key => $type) {
+      if ($type['type'] == 'display') {
+        $display_type_options[str_replace('display:', '', $key)] = $type['title']->render();
+      }
+    }
+    natcasesort($display_type_options);
+
+    return $display_type_options;
   }
 }
