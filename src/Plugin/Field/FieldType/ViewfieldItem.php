@@ -84,6 +84,17 @@ class ViewfieldItem extends EntityReferenceItem {
   /**
    * {@inheritdoc}
    */
+  public function storageSettingsForm(array &$form, FormStateInterface $form_state, $has_data) {
+    $element = parent::storageSettingsForm($form, $form_state, $has_data);
+    // Hide entity type selection.
+    $element['target_type']['#access'] = FALSE;
+
+    return $element;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function fieldSettingsForm(array $form, FormStateInterface $form_state) {
     $default_settings = $this->defaultFieldSettings();
     $form = array();
