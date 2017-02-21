@@ -112,13 +112,20 @@ class ViewfieldWidgetSelect extends OptionsSelectWidget {
       ),
     );
 
-    if (!$force_default) {
-      $element['tokens'] = array(
+    $element['token_help'] = array(
+      '#type' => 'item',
+      '#access' => !$force_default,
+      '#weight' => 30,
+      '#states' => array(
+        'visible' => array(
+          ':input[name="' . $visible_field_name . '"]' => array('!value' => '_none'),
+        ),
+      ),
+      'tokens' => array(
         '#theme' => 'token_tree_link',
         '#token_types' => array($items->getEntity()->getEntityTypeId()),
-        '#weight' => 30,
-      );
-    }
+      ),
+    );
 
     return $element;
   }
