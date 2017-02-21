@@ -107,7 +107,13 @@ class ViewfieldItem extends EntityReferenceItem {
       '#description'   => $this->t('Hides this field in forms and enforces the configured default value for all entities in the bundle, making it unnecessary to assign values individually to each one.<br>If this is checked, you must provide a default value.'),
     );
 
-    $form['allowed_views'] = array(
+    $form['allowed_values'] = array(
+      '#type' => 'details',
+      '#title' => $this->t('Allowed values'),
+      '#open' => FALSE,
+    );
+
+    $form['allowed_values']['allowed_views'] = array(
       '#type' => 'checkboxes',
       '#options' => self::getViewsOptions(),
       '#title' => $this->t('Allowed views'),
@@ -115,7 +121,7 @@ class ViewfieldItem extends EntityReferenceItem {
       '#description'   => $this->t('Views available for content authors. Leave empty to allow all.'),
     );
 
-    $form['allowed_display_types'] = array(
+    $form['allowed_values']['allowed_display_types'] = array(
       '#type' => 'checkboxes',
       '#options' => self::getDisplayTypeOptions(),
       '#title' => $this->t('Allowed display types'),
