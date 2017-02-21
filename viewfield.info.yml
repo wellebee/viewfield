@@ -1,6 +1,6 @@
 name: Viewfield
 type: module
-description: 'Defines a entity reference field type to display a view.'
+description: 'Defines an entity reference field type to display a view.'
 version: VERSION
 core: 8.x
 dependencies:
