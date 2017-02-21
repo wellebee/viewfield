@@ -1,0 +1,57 @@
+<?php
+
+/**
+ * @file
+ * Defines an entity reference field type to display a view.
+ */
+
+use Drupal\Core\Template\Attribute;
+
+/**
+ * Implements hook_theme().
+ */
+function viewfield_theme() {
+  return array(
+    'viewfield_item' => array(
+      'variables' => array(
+        'title' => NULL,
+        'content' => NULL,
+        'attributes' => array(),
+        'title_attributes' => array(),
+        'title_prefix' => NULL,
+        'title_suffix' => NULL,
+        'delta' => NULL,
+      ),
+    ),
+  );
+}
+
+/**
+ * Prepares variables for viewfield element templates.
+ *
+ * Default template: viewfield-element.html.twig.
+ *
+ * @param array $variables
+ *   An associative array containing:
+ * - title: The title of this item if visible.
+ * - content: The content of this item.
+ * - attributes: array of HTML attributes populated by modules, intended to
+ *   be added to the main container tag of this template.
+ * - title_attributes: Same as attributes, except applied to the main title
+ *   tag that appears in the template.
+ * - title_prefix: Additional output populated by modules, intended to be
+ *   displayed in front of the main title tag that appears in the template.
+ * - title_suffix: Additional output populated by modules, intended to be
+ *   displayed after the main title tag that appears in the template.
+ * - delta: Ordinal specifying the item number in the field.
+ */
+function template_preprocess_viewfield_item(&$variables) {
+  $variables['attributes'] = new Attribute($variables['attributes']);
+  $classes = array('viewfield-item');
+  if (isset($variables['delta'])) {
+    $classes[] = 'viewfield-item-' . $variables['delta'];
+  }
+  $variables['attributes']->addClass($classes);
+  $variables['title_attributes'] = new Attribute($variables['title_attributes']);
+  $variables['title_attributes']->addClass(array('viewfield-title'));
+}

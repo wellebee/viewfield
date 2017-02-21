@@ -52,6 +52,9 @@ class ViewfieldFormatterDefault extends FormatterBase {
     );
 
     $always_build_output = $this->getFieldSetting('always_build_output');
+    $include_view_title = $this->getFieldSetting('include_view_title');
+    $show_empty_view_title = $this->getFieldSetting('show_empty_view_title');
+    $elements = array();
     foreach ($values as $delta => $value) {
       $target_id = $value['target_id'];
       $display_id = $value['display_id'];
@@ -70,7 +73,14 @@ class ViewfieldFormatterDefault extends FormatterBase {
       $view->execute();
 
       if ($always_build_output || !empty($view->result)) {
-        $elements[$delta] = $view->buildRenderable($display_id, $arguments);
+        $elements[$delta] = array(
+          '#theme' => 'viewfield_item',
+          '#content' => $view->buildRenderable($display_id, $arguments),
+          '#delta' => $delta,
+        );
+        if ($include_view_title && (!empty($view->result) || $show_empty_view_title)) {
+          $elements[$delta]['#title'] = $view->getTitle() ?: NULL;
+        }
       }
     }
 

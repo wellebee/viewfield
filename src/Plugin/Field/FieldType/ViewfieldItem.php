@@ -43,6 +43,8 @@ class ViewfieldItem extends EntityReferenceItem {
       'allowed_display_types' => array('block' => 'block'),
       'always_build_output' => 0,
       'hide_field_label' => 0,
+      'include_view_title' => 0,
+      'show_empty_view_title' => 0,
     ) + parent::defaultFieldSettings();
   }
 
@@ -136,7 +138,26 @@ class ViewfieldItem extends EntityReferenceItem {
       '#type' => 'checkbox',
       '#title' => $this->t('Hide field label'),
       '#default_value' => $this->getSetting('hide_field_label') ?: $default_settings['hide_field_label'],
-      '#description' => $this->t('Hide the label (name) of the field when the field is rendered.<br>This setting may be useful when outputing titles from the view display.'),
+      '#description' => $this->t('Hide the label (name) of the field when the field is rendered.<br>This setting may be useful when including view display titles.'),
+    );
+
+    $form['include_view_title'] = array(
+      '#type' => 'checkbox',
+      '#title' => $this->t('Include view title'),
+      '#default_value' => $this->getSetting('include_view_title') ?: $default_settings['include_view_title'],
+      '#description' => $this->t('Include the view display title in the output.'),
+    );
+
+    $form['show_empty_view_title'] = array(
+      '#type' => 'checkbox',
+      '#title' => $this->t('Show empty view title'),
+      '#default_value' => $this->getSetting('show_empty_view_title') ?: $default_settings['show_empty_view_title'],
+      '#description' => $this->t('Show the view title even when the view produces no results.'),
+      '#states' => array(
+        'visible' => array(
+          ':input[name="settings[include_view_title]"]' => array('checked' => TRUE),
+        ),
+      ),
     );
 
     $form['#element_validate'][] = array(get_class($this), 'fieldSettingsFormValidate');
