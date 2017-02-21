@@ -42,10 +42,12 @@ class ViewfieldWidgetSelect extends OptionsSelectWidget {
     // Set up options for allowed views.
     $element['target_id']['#multiple'] = FALSE;
     // Always allow '_none' for non-required fields or second and greater delta.
-    $views_options = (!$this->fieldDefinition->isRequired() || $delta > 0) ? array('_none' => '- None -') : array();
+    $empty_label = $this->getEmptyLabel() ?: $this->t('- None -');
+    $views_options = (!$this->fieldDefinition->isRequired() || $delta > 0) ? array('_none' => $empty_label) : array();
     $allowed_views_options = array_intersect_key(ViewfieldItem::getViewsOptions(), array_filter($items->getSetting('allowed_views')));
     if (empty($allowed_views_options)) {
       $allowed_views_options = $element['target_id']['#options'];
+      natcasesort($allowed_views_options);
     }
     $element['target_id']['#options'] = array_merge($views_options, $allowed_views_options);
 
