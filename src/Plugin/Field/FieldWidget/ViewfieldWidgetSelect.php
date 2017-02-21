@@ -5,6 +5,7 @@ namespace Drupal\viewfield\Plugin\Field\FieldWidget;
 use Drupal\Core\Field\Plugin\Field\FieldWidget\OptionsSelectWidget;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Field\FieldFilteredMarkup;
 use Drupal\viewfield\Plugin\Field\FieldType\ViewfieldItem;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\HtmlCommand;
@@ -247,7 +248,7 @@ class ViewfieldWidgetSelect extends OptionsSelectWidget {
       $allowed_display_types = array_filter($this->getFieldSetting('allowed_display_types'));
       foreach ($views[$entity_id]->get('display') as $display_id => $display) {
         if (empty($allowed_display_types) || isset($allowed_display_types[$display['display_plugin']])) {
-          $view_display_options[$display_id] = $display['display_title'];
+          $view_display_options[$display_id] = FieldFilteredMarkup::create($display['display_title']);
         }
       }
       natcasesort($view_display_options);

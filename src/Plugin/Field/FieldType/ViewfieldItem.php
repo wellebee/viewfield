@@ -6,6 +6,7 @@ use Drupal\Core\Field\Plugin\Field\FieldType\EntityReferenceItem;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\TypedData\DataDefinition;
+use Drupal\Core\Field\FieldFilteredMarkup;
 use Drupal\views\Views;
 
 /**
@@ -158,7 +159,7 @@ class ViewfieldItem extends EntityReferenceItem {
   public static function getViewsOptions() {
     $views_options = array();
     foreach (Views::getEnabledViews() as $key => $view) {
-      $views_options[$key] = $view->get('label');
+      $views_options[$key] = FieldFilteredMarkup::create($view->get('label'));
     }
     natcasesort($views_options);
 
@@ -175,7 +176,7 @@ class ViewfieldItem extends EntityReferenceItem {
     $display_type_options = array();
     foreach (Views::pluginList() as $key => $type) {
       if ($type['type'] == 'display') {
-        $display_type_options[str_replace('display:', '', $key)] = $type['title']->render();
+        $display_type_options[str_replace('display:', '', $key)] = FieldFilteredMarkup::create($type['title']->render());
       }
     }
     natcasesort($display_type_options);
