@@ -39,6 +39,7 @@ class ViewfieldFormatterDefault extends FormatterBase {
       ),
     );
 
+    $always_build_output = $this->getFieldSetting('always_build_output');
     foreach ($values as $delta => $value) {
       $target_id = $value['target_id'];
       $display_id = $value['display_id'];
@@ -56,7 +57,7 @@ class ViewfieldFormatterDefault extends FormatterBase {
       $view->preExecute();
       $view->execute();
 
-      if (!empty($view->result)) {
+      if ($always_build_output || !empty($view->result)) {
         $elements[$delta] = $view->buildRenderable($display_id, $arguments);
       }
     }

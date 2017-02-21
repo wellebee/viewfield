@@ -41,6 +41,7 @@ class ViewfieldItem extends EntityReferenceItem {
       'force_default' => 0,
       'allowed_views' => array(),
       'allowed_display_types' => array('block' => 'block'),
+      'always_build_output' => 0,
     ) + parent::defaultFieldSettings();
   }
 
@@ -101,10 +102,10 @@ class ViewfieldItem extends EntityReferenceItem {
     $form = array();
 
     $form['force_default'] = array(
-      '#type'          => 'checkbox',
-      '#title'         => $this->t('Always use default value'),
+      '#type' => 'checkbox',
+      '#title' => $this->t('Always use default value'),
       '#default_value' => $this->getSetting('force_default') ?: $default_settings['force_default'],
-      '#description'   => $this->t('Hides this field in forms and enforces the configured default value for all entities in the bundle, making it unnecessary to assign values individually to each one.<br>If this is checked, you must provide a default value.'),
+      '#description' => $this->t('Hides this field in forms and enforces the configured default value for all entities in the bundle, making it unnecessary to assign values individually to each one.<br>If this is checked, you must provide a default value.'),
     );
 
     $form['allowed_views'] = array(
@@ -112,7 +113,7 @@ class ViewfieldItem extends EntityReferenceItem {
       '#options' => self::getViewsOptions(),
       '#title' => $this->t('Allowed views'),
       '#default_value' => $this->getSetting('allowed_views') ?: $default_settings['allowed_views'],
-      '#description'   => $this->t('Views available for content authors. Leave empty to allow all.'),
+      '#description' => $this->t('Views available for content authors. Leave empty to allow all.'),
     );
 
     $form['allowed_display_types'] = array(
@@ -120,7 +121,14 @@ class ViewfieldItem extends EntityReferenceItem {
       '#options' => self::getDisplayTypeOptions(),
       '#title' => $this->t('Allowed display types'),
       '#default_value' => $this->getSetting('allowed_display_types') ?: $default_settings['allowed_display_types'],
-      '#description'   => $this->t('Display types available for content authors. Leave empty to allow all.'),
+      '#description' => $this->t('Display types available for content authors. Leave empty to allow all.'),
+    );
+
+    $form['always_build_output'] = array(
+      '#type' => 'checkbox',
+      '#title' => $this->t('Always build output'),
+      '#default_value' => $this->getSetting('always_build_output') ?: $default_settings['always_build_output'],
+      '#description' => $this->t('Produce rendered output even if Views produces no results.<br>This option may be useful for some specialized cases, for example to force rendering of an attachment display even if there are no results for the view.'),
     );
 
     $form['#element_validate'][] = array(get_class($this), 'fieldSettingsFormValidate');
