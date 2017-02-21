@@ -19,6 +19,18 @@ class ViewfieldFormatterDefault extends FormatterBase {
   /**
    * {@inheritdoc}
    */
+  public function view(FieldItemListInterface $items, $langcode = NULL) {
+    $elements = parent::view($items, $langcode);
+    if ($this->getFieldSetting('hide_field_label')) {
+      $elements['#label_display'] = 'hidden';
+    }
+
+    return $elements;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function viewElements(FieldItemListInterface $items, $langcode) {
     $entity = $items->getEntity();
 

@@ -42,6 +42,7 @@ class ViewfieldItem extends EntityReferenceItem {
       'allowed_views' => array(),
       'allowed_display_types' => array('block' => 'block'),
       'always_build_output' => 0,
+      'hide_field_label' => 0,
     ) + parent::defaultFieldSettings();
   }
 
@@ -129,6 +130,13 @@ class ViewfieldItem extends EntityReferenceItem {
       '#title' => $this->t('Always build output'),
       '#default_value' => $this->getSetting('always_build_output') ?: $default_settings['always_build_output'],
       '#description' => $this->t('Produce rendered output even if Views produces no results.<br>This option may be useful for some specialized cases, for example to force rendering of an attachment display even if there are no results for the view.'),
+    );
+
+    $form['hide_field_label'] = array(
+      '#type' => 'checkbox',
+      '#title' => $this->t('Hide field label'),
+      '#default_value' => $this->getSetting('hide_field_label') ?: $default_settings['hide_field_label'],
+      '#description' => $this->t('Hide the label (name) of the field when the field is rendered.<br>This setting may be useful when outputing titles from the view display.'),
     );
 
     $form['#element_validate'][] = array(get_class($this), 'fieldSettingsFormValidate');
