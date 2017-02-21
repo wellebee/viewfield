@@ -18,7 +18,7 @@ To add a Viewfield to an fieldable entity type (e.g., a content type):
 5. Selecting **Required field** constrains the field to always contain a value.
 6. Assign one or more default values to be used for newly created content, or for use with the **Always use default value** option.
 7. Selecting **Always use default value** means the Viewfield will always use the provided default value(s) when rendering the field, and this field will be hidden in all content editing forms, making it unnecessary to assign values individually to each piece of content. Nice! If this is checked, you **must** provide a default value.
-8. The **Allowed values** collapsible details panel controls restriction of views and display values. The checkboxes in **Allowed views** restrict which views may be used in a field. The checkboxes in **Allowed display types** restricts the availability of views displays.
+8. The set of allowed views and allowed display types may be restricted on content edit forms using the **Allowed views** and **Allowed display types** checkboxes respectively.
 9. Press **Save settings** to complete the field creation process.
 
 Assigning a value (or default value)to a Viewfield consists of selecting a View and Display from the select boxes, and providing an optional comma-delimited list of arguments (contextual filters) for the display. The argument list may contain tokens. Token help is available by clicking on the **Browse available tokens** link shown below the arguments field.
