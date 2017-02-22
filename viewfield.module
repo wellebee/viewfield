@@ -14,14 +14,23 @@ use Drupal\Core\Template\Attribute;
 function viewfield_help($route_name, RouteMatchInterface $route_match) {
   switch ($route_name) {
     case 'help.page.viewfield':
-      $output = '';
-      $output .= '<h3>' . t('About') . '</h3>';
-      $output .= '<p>' . t('The viewfield module defines an entity reference field type to display a view. For more information, see the <a href=":viewfield_documentation">online documentation for the Viewfield module</a>.', array(':viewfield_documentation' => 'http://cgit.drupalcode.org/viewfield/plain/README.md?id=refs/heads/8.x-3.x')) . '</p>';
-      $output .= '<h3>' . t('Uses') . '</h3>';
-      $output .= '<p>' . t('Viewfield enables an administrator or content author to integrate a views display into content just like any other field. In addition, through the use of the <em>Always use default value</em> setting, the same view may automatically be placed into all entities in a bundle. Viewfield has helpful theming support, making it easy to customize presentation.') . '</p>';
-
-      return $output;
+      $text = file_get_contents(dirname(__FILE__) . "/README.md");
+      if (!\Drupal::moduleHandler()->moduleExists('markdown')) {
+        $header = '<p><strong>Want to see this page with proper formatting? Install the <a href="https://www.drupal.org/project/markdown">markdown</a> module.</strong></p>';
+        return '<pre>' . $header . $text . '</pre>';
+      }
+      else {
+        // Use the Markdown filter to render the README.
+        $filter_manager = \Drupal::service('plugin.manager.filter');
+        $settings = \Drupal::configFactory()
+          ->get('markdown.settings')
+          ->getRawData();
+        $config = array('settings' => $settings);
+        $filter = $filter_manager->createInstance('markdown', $config);
+        return $filter->process($text, 'en');
+      }
   }
+  return NULL;
 }
 
 /**
