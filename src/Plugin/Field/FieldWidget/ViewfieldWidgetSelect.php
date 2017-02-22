@@ -138,19 +138,17 @@ class ViewfieldWidgetSelect extends OptionsSelectWidget {
       }
     }
     else {
-      // Actually $max_delta == 0 for this case.
-      for ($delta = 0; $delta <= $max_delta; $delta++) {
-        $element = &$elements[$delta];
-        // // Change title to simply 'View'
-        $element['target_id']['#title'] = $this->t('View');
-        // Wrap single values in a fieldset unless on the default settings form,
-        // as long as the field is visible (!force_default).
-        if (!$this->isDefaultValueWidget($form_state) && !$this->getFieldSetting('force_default')) {
-          $element += array(
-            '#type' => 'fieldset',
-            '#title' => $this->fieldDefinition->getLabel(),
-          );
-        }
+      // $max_delta == 0 for this case.
+      $element = &$elements[0];
+      // Change title to simply 'View'
+      $element['target_id']['#title'] = $this->t('View');
+      // Wrap single values in a fieldset unless on the default settings form,
+      // as long as the field is visible (!force_default).
+      if (!$this->isDefaultValueWidget($form_state) && !$this->getFieldSetting('force_default')) {
+        $element += array(
+          '#type' => 'fieldset',
+          '#title' => $this->fieldDefinition->getLabel(),
+        );
       }
     }
 
