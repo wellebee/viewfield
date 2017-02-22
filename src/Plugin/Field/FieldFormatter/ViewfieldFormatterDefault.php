@@ -56,12 +56,13 @@ class ViewfieldFormatterDefault extends FormatterBase {
       '#description' => $this->t('Include the view display title in the output.'),
     );
 
+    $include_view_title_name = 'fields[' . $this->fieldDefinition->getName() . '][settings_edit_form][settings][include_view_title]';
     $form['show_empty_view_title'] = array(
       '#type' => 'checkbox',
       '#title' => $this->t('Show empty view title'),
       '#default_value' => $this->getSetting('show_empty_view_title'),
       '#description' => $this->t('Show the view title even when the view produces no results.<br>This option has an effect only when <em>Always build output</em> is also selected.'),
-      '#states' => array('visible' => array(':input[name="settings[include_view_title]"]' => array('checked' => TRUE))),
+      '#states' => array('visible' => array(':input[name="' . $include_view_title_name . '"]' => array('checked' => TRUE))),
     );
 
     return $form;
