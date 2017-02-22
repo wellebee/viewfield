@@ -80,9 +80,9 @@ class ViewfieldWidgetSelect extends OptionsSelectWidget {
     // Construct CSS class to target ajax callback.
     $display_id_class = $this->createDisplayClass($form_state_keys);
 
-    // Use target_id field to control visibility of secondary ones.
+    // Use primary target_id field to control visibility of secondary ones.
     $primary_field_name = $form_state_keys[0] . '[' . implode('][', array_slice($form_state_keys, 1)) . '][target_id]';
-    $visible_field_test = array(':input[name="' . $primary_field_name . '"]' => array('!value' => '_none'));
+    $primary_field_visible_test = array(':input[name="' . $primary_field_name . '"]' => array('!value' => '_none'));
 
     $element['display_id'] = array(
       '#title' => 'Display',
@@ -93,7 +93,7 @@ class ViewfieldWidgetSelect extends OptionsSelectWidget {
       '#description' => $this->t('View display to be used.'),
       '#attributes' => array('class' => array($display_id_class)),
       '#weight' => 10,
-      '#states' => array('visible' => $visible_field_test),
+      '#states' => array('visible' => $primary_field_visible_test),
     );
 
     $element['arguments'] = array(
@@ -103,14 +103,14 @@ class ViewfieldWidgetSelect extends OptionsSelectWidget {
       '#access' => !$force_default,
       '#description' => $this->t('A comma separated list of arguments to pass to the selected view display.<br>This field supports tokens.'),
       '#weight' => 20,
-      '#states' => array('visible' => $visible_field_test),
+      '#states' => array('visible' => $primary_field_visible_test),
     );
 
     $element['token_help'] = array(
       '#type' => 'item',
       '#access' => !$force_default,
       '#weight' => 30,
-      '#states' => array('visible' => $visible_field_test),
+      '#states' => array('visible' => $primary_field_visible_test),
       'tokens' => array(
         '#theme' => 'token_tree_link',
         '#token_types' => array($items->getEntity()->getEntityTypeId()),

@@ -147,7 +147,7 @@ class ViewfieldFormatterDefault extends FormatterBase {
       $view->preExecute();
       $view->execute();
 
-      if ($always_build_output || !empty($view->result)) {
+      if (!empty($view->result) || $always_build_output) {
         $elements[$delta] = array(
           '#theme' => 'viewfield_item',
           '#content' => $view->buildRenderable($display_id, $arguments),
