@@ -27,9 +27,9 @@ function viewfield_theme() {
 }
 
 /**
- * Prepares variables for viewfield element templates.
+ * Prepares variables for viewfield item templates.
  *
- * Default template: viewfield-element.html.twig.
+ * Default template: viewfield-item.html.twig.
  *
  * @param array $variables
  *   An associative array containing:
