@@ -39,14 +39,14 @@ class ViewfieldFormatterDefault extends FormatterBase {
       '#type' => 'checkbox',
       '#title' => $this->t('Always build output'),
       '#default_value' => $this->getSetting('always_build_output'),
-      '#description' => $this->t('Produce rendered output even if Views produces no results.<br>This option may be useful for some specialized cases, for example to force rendering of an attachment display even if there are no results for the view.'),
+      '#description' => $this->t('Produce rendered output even if the view produces no results.<br>This option may be useful for some specialized cases, e.g., to force rendering of an attachment display even if there are no view results.'),
     );
 
     $form['hide_field_label'] = array(
       '#type' => 'checkbox',
       '#title' => $this->t('Hide field label'),
       '#default_value' => $this->getSetting('hide_field_label'),
-      '#description' => $this->t('Hide the label (name) of the field when the field is rendered.<br>This setting may be useful when including view display titles.'),
+      '#description' => $this->t('Hide the label (name) of the field when the field is rendered.<br>This option may be useful when including view display titles.'),
     );
 
     $form['include_view_title'] = array(
@@ -60,12 +60,8 @@ class ViewfieldFormatterDefault extends FormatterBase {
       '#type' => 'checkbox',
       '#title' => $this->t('Show empty view title'),
       '#default_value' => $this->getSetting('show_empty_view_title'),
-      '#description' => $this->t('Show the view title even when the view produces no results.'),
-      '#states' => array(
-        'visible' => array(
-          ':input[name="settings[include_view_title]"]' => array('checked' => TRUE),
-        ),
-      ),
+      '#description' => $this->t('Show the view title even when the view produces no results.<br>This option has an effect only when <em>Always build output</em> is also selected.'),
+      '#states' => array('visible' => array(':input[name="settings[include_view_title]"]' => array('checked' => TRUE))),
     );
 
     return $form;
