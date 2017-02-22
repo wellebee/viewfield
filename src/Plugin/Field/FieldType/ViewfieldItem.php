@@ -141,7 +141,7 @@ class ViewfieldItem extends EntityReferenceItem {
     if ($settings['force_default']) {
       $default_value = $form_state->getValue('default_value_input');
       $field_name = $form_state->getFormObject()->getEntity()->getName();
-      if (empty($default_value[$field_name][0]['target_id']) || (isset($default_value[$field_name][0]['target_id']) && $default_value[$field_name][0]['target_id'] == '_none')) {
+      if (empty($default_value[$field_name][0]['target_id']) || $default_value[$field_name][0]['target_id'] == '_none') {
         $form_state->setErrorByName('default_value_input', t('%title requires a default value.', array(
           '%title' => $form['force_default']['#title'],
         )));
