@@ -50,6 +50,7 @@ class ViewfieldWidgetSelect extends OptionsSelectWidget {
       natcasesort($allowed_views_options);
     }
     $element['target_id']['#options'] = array_merge($none_option, $allowed_views_options);
+    $element['target_id']['#multiple'] = FALSE;
 
     // Build an array of keys to retrieve values from $form_state.
     $form_state_keys = array($items->getName(), $delta);
@@ -124,18 +125,23 @@ class ViewfieldWidgetSelect extends OptionsSelectWidget {
    */
   protected function formMultipleElements(FieldItemListInterface $items, array &$form, FormStateInterface $form_state) {
     $elements = parent::formMultipleElements($items, $form, $form_state);
-
-    $is_multiple = $elements['#cardinality_multiple'];
     $max_delta = $elements['#max_delta'];
-    for ($delta = 0; $delta <= $max_delta; $delta++) {
-      $element = &$elements[$delta];
-      // Change title to 'View #' for multiple values, 'View' for single value.
-      if ($is_multiple) {
+    $is_multiple = $elements['#cardinality_multiple'];
+
+    if ($is_multiple) {
+      for ($delta = 0; $delta <= $max_delta; $delta++) {
+        $element = &$elements[$delta];
+        // Change title to 'View #'
         $element['target_id']['#title'] = $this->t('View @number', array('@number' => $delta + 1));
         // Force title display.
         $element['target_id']['#title_display'] = 'before';
       }
-      else {
+    }
+    else {
+      // Actually $max_delta == 0 for this case.
+      for ($delta = 0; $delta <= $max_delta; $delta++) {
+        $element = &$elements[$delta];
+        // // Change title to simply 'View'
         $element['target_id']['#title'] = $this->t('View');
         // Wrap single values in a fieldset unless on the default settings form,
         // as long as the field is visible (!force_default).
