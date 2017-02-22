@@ -165,8 +165,8 @@ class ViewfieldWidgetSelect extends OptionsSelectWidget {
   /**
    * Overridden form validation handler for widget elements.
    *
-   * Save selected value as a single item, since there will be at most one.
-   * This prevents the target_id value being nested inside $form_state.
+   * Save selected target_id as a single item, since there will be at most one.
+   * This prevents the value from being deeply nested inside $form_state.
    *
    * @param array $element
    *   The form element.
@@ -206,8 +206,8 @@ class ViewfieldWidgetSelect extends OptionsSelectWidget {
 //    }
 //    $form_state->setValueForElement($element, $items);
 
-    $element_value = !empty($values[0]) ? $values[0] : NULL;
-    $form_state->setValueForElement($element, $element_value);
+    $target_id = !empty($values[0]) ? $values[0] : NULL;
+    $form_state->setValueForElement($element, $target_id);
   }
 
   /**
