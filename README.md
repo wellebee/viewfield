@@ -8,12 +8,12 @@ The viewfield module defines an entity reference field type to display a view.
 
 Install the module using the Drupal UI, `drush`, or `composer`.
 
-## Field Creation
+## Field Configuration
 
 To add a Viewfield to an fieldable entity type (e.g., a content type): 
 1. Edit the content type and navigate to the **Manage Fields** tab. 
 2. Choose **+ Add Field** and select **Viewfield** under the **Reference** category.
-3. Choose the number of values (distinct view displays) you want to use and press **Save Field Settings**.
+3. Choose the number of field values (distinct view displays) you want to use and press **Save Field Settings**.
 4. Next come the field settings on the field edit tab. 
 5. Selecting **Required field** constrains the field to always contain a value.
 6. Assign one or more default values to be used for newly created content, or for use with the **Always use default value** option.
