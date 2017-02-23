@@ -43,7 +43,7 @@ class ViewfieldWidgetSelect extends OptionsSelectWidget {
     $empty_label = $this->getEmptyLabel() ?: $this->t('- None -');
     // Always allow '_none' for non-required fields or second and greater delta.
     $none_option = (!$this->fieldDefinition->isRequired() || $delta > 0) ? array('_none' => $empty_label) : array();
-    $allowed_views_options = array_intersect_key(ViewfieldItem::getViewsOptions(), array_filter($items->getSetting('allowed_views')));
+    $allowed_views_options = array_intersect_key(ViewfieldItem::getViewsOptions(), array_filter($this->getFieldSetting('allowed_views')));
     if (empty($allowed_views_options)) {
       // At this point, empty $allowed_views_options means allow all.
       $allowed_views_options = $element['target_id']['#options'];
@@ -53,9 +53,9 @@ class ViewfieldWidgetSelect extends OptionsSelectWidget {
     $element['target_id']['#multiple'] = FALSE;
 
     // Build an array of keys to retrieve values from $form_state.
-    $form_state_keys = array($items->getName(), $delta);
-    if (!empty($element['target_id']['#field_parents'])) {
-      $form_state_keys = array_merge($element['target_id']['#field_parents'], $form_state_keys);
+    $form_state_keys = array($this->fieldDefinition->getName(), $delta);
+    if (!empty($form['#parents'])) {
+      $form_state_keys = array_merge($form['#parents'], $form_state_keys);
     }
 
     // Assign default values.
@@ -64,6 +64,7 @@ class ViewfieldWidgetSelect extends OptionsSelectWidget {
     $display_id_options = NULL;
     $default_display_id = NULL;
     $default_arguments = NULL;
+    // Use form state values if available when Ajax callback has run.
     if (isset($form_state_value['target_id']) || $form_state->getTriggeringElement()) {
       if (isset($form_state_value['target_id'])) {
         $display_id_options = $this->getViewDisplayOptions($form_state_value['target_id']);
