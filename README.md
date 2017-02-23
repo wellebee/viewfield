@@ -1,6 +1,6 @@
 ### About
 
-The viewfield module defines an entity reference field type to display a view. Viewfield enables an administrator or content author to integrate a views display into content just like any other field. In addition, through the use of the <em>Always use default value</em> setting, the same view may automatically be placed into all entities in a bundle. Viewfield has helpful theming support, making it easy to customize presentation.
+The viewfield module defines an entity reference field type to display a view. Viewfield enables an administrator or content author to integrate a views display into any fieldable entity, such as content, users or paragraphs. In addition, through the use of the **Always use default value** setting, the same view may automatically be placed into all entities in a bundle. Viewfield has helpful theming support, making it easy to customize presentation.
 
 ### Field Configuration
 
@@ -32,6 +32,6 @@ This option may be useful when including view display titles.
 Include the view display title in the output.
 - **Show empty view title**
 Show the view title even when the view produces no results.
-This option has an effect only when Always build output is also selected.
+This option has an effect only when **Always build output** is also selected.
 
 Each Viewfield item (value) is themed with the `viewfield-item.html.twig` template, which may be overridden.
