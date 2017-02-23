@@ -23,11 +23,31 @@
  * @ingroup themeable
  */
 #}
-<div{{ attributes }}>
-  {{ title_prefix }}
-  {% if title %}
-    <h2{{ title_attributes }}>{{ title }}</h2>
-  {% endif %}
-  {{ title_suffix }}
-  {{ content }}
-</div>
+{%
+set classes = [
+  'viewfield__item',
+  'viewfield--item-label-' ~ label_display,
+  'field__item',
+  'field--item-label-' ~ label_display,
+]
+%}
+{%
+set title_classes = [
+  'viewfield__item__label',
+  'field__item__label',
+  label_display == 'visually_hidden' ? 'visually-hidden',
+]
+%}
+
+{% if label_hidden %}
+  <div{{ attributes.addClass(classes) }}>
+    {{ content }}
+  </div>
+{% else %}
+  <div{{ attributes.addClass(classes) }}>
+    {{ title_prefix }}
+    <div{{ title_attributes.addClass(title_classes) }}>{{ label }}</div>
+    {{ title_suffix }}
+    {{ content }}
+  </div>
+{% endif %}

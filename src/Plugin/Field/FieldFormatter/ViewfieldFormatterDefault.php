@@ -23,9 +23,8 @@ class ViewfieldFormatterDefault extends FormatterBase {
   public static function defaultSettings() {
     return array(
       'always_build_output' => 0,
-      'hide_field_label' => 0,
-      'include_view_title' => 0,
-      'show_empty_view_title' => 0,
+      'view_title' => 'hidden',
+      'empty_view_title' => 'hidden',
     ) + parent::defaultSettings();
   }
 
@@ -42,27 +41,22 @@ class ViewfieldFormatterDefault extends FormatterBase {
       '#description' => $this->t('Produce rendered output even if the view produces no results.<br>This option may be useful for some specialized cases, e.g., to force rendering of an attachment display even if there are no view results.'),
     );
 
-    $form['hide_field_label'] = array(
-      '#type' => 'checkbox',
-      '#title' => $this->t('Hide field label'),
-      '#default_value' => $this->getSetting('hide_field_label'),
-      '#description' => $this->t('Hide the label (name) of the field when the field is rendered.<br>This option may be useful when including view display titles.'),
+    $form['view_title'] = array(
+      '#type' => 'select',
+      '#title' => $this->t('View title'),
+      '#options' => $this->getFieldLabelOptions(),
+      '#default_value' => $this->getSetting('view_title'),
+      '#description' => $this->t('Option to render the view display title in the output.'),
     );
 
-    $form['include_view_title'] = array(
-      '#type' => 'checkbox',
-      '#title' => $this->t('Include view title'),
-      '#default_value' => $this->getSetting('include_view_title'),
-      '#description' => $this->t('Include the view display title in the output.'),
-    );
-
-    $include_view_title_name = 'fields[' . $this->fieldDefinition->getName() . '][settings_edit_form][settings][include_view_title]';
-    $form['show_empty_view_title'] = array(
-      '#type' => 'checkbox',
-      '#title' => $this->t('Show empty view title'),
-      '#default_value' => $this->getSetting('show_empty_view_title'),
-      '#description' => $this->t('Show the view title even when the view produces no results.<br>This option has an effect only when <em>Always build output</em> is also selected.'),
-      '#states' => array('visible' => array(':input[name="' . $include_view_title_name . '"]' => array('checked' => TRUE))),
+    $always_build_output_name = 'fields[' . $this->fieldDefinition->getName() . '][settings_edit_form][settings][always_build_output]';
+    $form['empty_view_title'] = array(
+      '#type' => 'select',
+      '#title' => $this->t('Empty view title'),
+      '#options' => $this->getFieldLabelOptions(),
+      '#default_value' => $this->getSetting('empty_view_title'),
+      '#description' => $this->t('Option to render the view title even when the view produces no results.<br>This option has an effect only when <em>Always build output</em> is also selected.'),
+      '#states' => array('visible' => array(':input[name="' . $always_build_output_name . '"]' => array('checked' => TRUE))),
     );
 
     return $form;
@@ -74,18 +68,14 @@ class ViewfieldFormatterDefault extends FormatterBase {
   public function settingsSummary() {
     $settings = $this->getSettings();
     $summary = array();
-
     $summary[] = $this->t('Always build output: @always_build_output', array(
       '@always_build_output' => $this->getCheckboxLabel($settings['always_build_output']),
     ));
-    $summary[] = $this->t('Hide field label: @hide_field_label', array(
-      '@hide_field_label' => $this->getCheckboxLabel($settings['hide_field_label']),
-    ));
-    $summary[] = $this->t('Include view title: @include_view_title', array(
-      '@include_view_title' => $this->getCheckboxLabel($settings['include_view_title']),
+    $summary[] = $this->t('View title: @view_title', array(
+      '@view_title' => $this->getFieldLabelOptions()[$settings['view_title']],
     ));
     $summary[] = $this->t('Show empty view title: @show_empty_view_title', array(
-      '@show_empty_view_title' => $this->getCheckboxLabel($settings['show_empty_view_title']),
+      '@show_empty_view_title' => $this->getFieldLabelOptions()[$settings['empty_view_title']],
     ));
 
     return $summary;
@@ -96,9 +86,10 @@ class ViewfieldFormatterDefault extends FormatterBase {
    */
   public function view(FieldItemListInterface $items, $langcode = NULL) {
     $elements = parent::view($items, $langcode);
-    if ($this->getSetting('hide_field_label')) {
-      $elements['#label_display'] = 'hidden';
-    }
+    $elements['#theme'] = 'viewfield';
+    $elements['#entity'] = $items->getEntity();
+    $elements['#view_mode'] = $this->viewMode;
+    $elements['#attached']['library'][] = 'viewfield/viewfield';
 
     return $elements;
   }
@@ -127,8 +118,8 @@ class ViewfieldFormatterDefault extends FormatterBase {
     );
 
     $always_build_output = $this->getSetting('always_build_output');
-    $include_view_title = $this->getSetting('include_view_title');
-    $show_empty_view_title = $this->getSetting('show_empty_view_title');
+    $view_title = $this->getSetting('view_title');
+    $empty_view_title = $this->getSetting('empty_view_title');
     $elements = array();
     foreach ($values as $delta => $value) {
       $target_id = $value['target_id'];
@@ -151,13 +142,10 @@ class ViewfieldFormatterDefault extends FormatterBase {
         $elements[$delta] = array(
           '#theme' => 'viewfield_item',
           '#content' => $view->buildRenderable($display_id, $arguments),
+          '#title' => $view->getTitle(),
+          '#label_display' => empty($view->result) ? $empty_view_title : $view_title,
           '#delta' => $delta,
-          '#entity' => $entity,
-          '#view_mode' => $this->viewMode,
         );
-        if ($include_view_title && (!empty($view->result) || $show_empty_view_title)) {
-          $elements[$delta]['#title'] = $view->getTitle() ?: NULL;
-        }
       }
     }
 
@@ -229,5 +217,22 @@ class ViewfieldFormatterDefault extends FormatterBase {
    */
   protected function getCheckboxLabel($value) {
     return !empty($value) ? $this->t('Yes') : $this->t('No');
+  }
+
+  /**
+   * Returns an array of visibility options for field labels.
+   *
+   * @return array
+   *   An array of visibility options.
+   *
+   * @see EntityViewDisplayEditForm::getFieldLabelOptions()
+   */
+  protected function getFieldLabelOptions() {
+    return array(
+      'above' => $this->t('Above'),
+      'inline' => $this->t('Inline'),
+      'hidden' => '- ' . $this->t('Hidden') . ' -',
+      'visually_hidden' => '- ' . $this->t('Visually Hidden') . ' -',
+    );
   }
 }

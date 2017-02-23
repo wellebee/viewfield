@@ -25,13 +25,9 @@ Viewfield has extensive theming support. The default formatter supports the foll
 - **Always build output**
 Produce rendered output even if the view produces no results.
 This option may be useful for some specialized cases, e.g., to force rendering of an attachment display even if there are no view results.
-- **Hide field label**
-Hide the label (name) of the field when the field is rendered.
-This option may be useful when including view display titles.
 - **Include view title**
-Include the view display title in the output.
-- **Show empty view title**
-Show the view title even when the view produces no results.
-This option has an effect only when **Always build output** is also selected.
+Options to render the view display title in the output. Choose from *Above*, *Inline*, *Hidden*, *Visually Hidden*.
+- **Empty view title**
+Options to render the view title even when the view produces no results. Choose from *Above*, *Inline*, *Hidden*, *Visually Hidden*. This option has an effect only when **Always build output** is selected.
 
-Each Viewfield item (value) is themed with the `viewfield-item.html.twig` template, which may be overridden.
+Each Viewfield item (value) is themed with the `viewfield.html.twig` and `viewfield-item.html.twig` templates, which may be overridden.

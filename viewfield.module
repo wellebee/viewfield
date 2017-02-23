@@ -38,19 +38,96 @@ function viewfield_help($route_name, RouteMatchInterface $route_match) {
  */
 function viewfield_theme() {
   return array(
+    'viewfield' => array(
+      'render element' => 'element',
+    ),
     'viewfield_item' => array(
       'render element' => 'element',
-//      'variables' => array(
-//        'title' => NULL,
-//        'content' => NULL,
-//        'attributes' => array(),
-//        'title_attributes' => array(),
-//        'title_prefix' => NULL,
-//        'title_suffix' => NULL,
-//        'delta' => NULL,
-//      ),
     ),
   );
+}
+
+/**
+ * Prepares variables for viewfield templates.
+ *
+ * Default template: viewfield.html.twig.
+ *
+ * @param array $variables
+ *   An associative array containing:
+ *   - element: A render element representing the field.
+ *   - attributes: A string containing the attributes for the wrapping div.
+ *   - title_attributes: A string containing the attributes for the title.
+ *
+ * @see template_preprocess_field()
+ */
+function template_preprocess_viewfield(&$variables, $hook) {
+  $element = $variables['element'];
+
+  // Creating variables for the template.
+  $variables['entity'] = $element['#entity'];
+  $variables['entity_type'] = $element['#entity_type'];
+  $variables['view_mode'] = $element['#view_mode'];
+  $variables['field_name'] = $element['#field_name'];
+  $variables['field_type'] = $element['#field_type'];
+  $variables['label_display'] = $element['#label_display'];
+  $variables['label_hidden'] = ($element['#label_display'] == 'hidden');
+  // Always set the field label - allow themes to decide whether to display it.
+  // In addition the label should be rendered but hidden to support screen
+  // readers.
+  $variables['label'] = $element['#title'];
+
+  $variables['multiple'] = $element['#is_multiple'];
+
+//  static $default_attributes;
+//  if (!isset($default_attributes)) {
+//    $default_attributes = new Attribute();
+//  }
+
+  // Merge attributes when a single-value field has a hidden label.
+//  if ($element['#label_display'] == 'hidden' && !$variables['multiple'] && !empty($element['#items'][0]->_attributes)) {
+//    $variables['attributes'] = NestedArray::mergeDeep($variables['attributes'], (array) $element['#items'][0]->_attributes);
+//  }
+
+  // We want other preprocess functions and the theme implementation to have
+  // fast access to the field item render arrays. The item render array keys
+  // (deltas) should always be numerically indexed starting from 0, and looping
+  // on those keys is faster than calling Element::children() or looping on all
+  // keys within $element, since that requires traversal of all element
+  // properties.
+  $variables['items'] = array();
+  $delta = 0;
+  while (!empty($element[$delta])) {
+//    $variables['items'][$delta]['content'] = $element[$delta];
+    $variables['items'][$delta] = $element[$delta];
+
+    // Modules (e.g., rdf.module) can add field item attributes (to
+    // $item->_attributes) within hook_entity_prepare_view(). Some field
+    // formatters move those attributes into some nested formatter-specific
+    // element in order have them rendered on the desired HTML element (e.g., on
+    // the <a> element of a field item being rendered as a link). Other field
+    // formatters leave them within $element['#items'][$delta]['_attributes'] to
+    // be rendered on the item wrappers provided by field.html.twig.
+//    $variables['items'][$delta]['attributes'] = !empty($element['#items'][$delta]->_attributes) ? new Attribute($element['#items'][$delta]->_attributes) : clone($default_attributes);
+    $delta++;
+  }
+}
+
+/**
+ * Implements hook_theme_suggestions_HOOK().
+ *
+ * @see system_theme_suggestions_field()
+ */
+function viewfield_theme_suggestions_viewfield(array $variables) {
+  $suggestions = array();
+  $element = $variables['element'];
+
+  $suggestions[] = 'viewfield__' . $element['#field_type'];
+  $suggestions[] = 'viewfield__' . $element['#field_name'];
+  $suggestions[] = 'viewfield__' . $element['#entity_type'] . '__' . $element['#bundle'];
+  $suggestions[] = 'viewfield__' . $element['#entity_type'] . '__' . $element['#field_name'];
+  $suggestions[] = 'viewfield__' . $element['#entity_type'] . '__' . $element['#field_name'] . '__' . $element['#bundle'];
+
+  return $suggestions;
 }
 
 /**
@@ -64,33 +141,9 @@ function viewfield_theme() {
  */
 function template_preprocess_viewfield_item(&$variables) {
   $element = $variables['element'];
-  $variables['title'] = isset($element['#title']) ? $element['#title'] : NULL;
-  $variables['content'] = isset($element['#content']) ? $element['#content'] : NULL;
+  $variables['label_display'] = $element['#label_display'];
+  $variables['label_hidden'] = ($element['#label_display'] == 'hidden');
+  $variables['label'] = $element['#title'];
+  $variables['content'] = $element['#content'];
   $variables['delta'] = $element['#delta'];
-  $variables['entity'] = $element['#entity'];
-  $variables['view_mode'] = $element['#view_mode'];
-
-  $variables['attributes'] = new Attribute($variables['attributes']);
-  $classes = array('viewfield-item');
-  if (isset($variables['delta'])) {
-    $classes[] = 'viewfield-item-' . $variables['delta'];
-  }
-  $variables['attributes']->addClass($classes);
-  $variables['title_attributes'] = new Attribute($variables['title_attributes']);
-  $variables['title_attributes']->addClass(array('viewfield-title'));
-}
-
-/**
- * Implements hook_theme_suggestions_HOOK().
- */
-function viewfield_theme_suggestions_viewfield_item(array $variables) {
-  $suggestions = array();
-  $entity = $variables['element']['#entity'];
-  $sanitized_view_mode = strtr($variables['element']['#view_mode'], '.', '_');
-
-  $suggestions[] = 'viewfield_item__' . $sanitized_view_mode;
-  $suggestions[] = 'viewfield_item__' . $entity->bundle();
-  $suggestions[] = 'viewfield_item__' . $entity->bundle() . '__' . $sanitized_view_mode;
-
-  return $suggestions;
 }

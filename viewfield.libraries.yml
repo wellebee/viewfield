@@ -1,0 +1,5 @@
+viewfield:
+  version: VERSION
+  css:
+    theme:
+      css/viewfield.css: {}
