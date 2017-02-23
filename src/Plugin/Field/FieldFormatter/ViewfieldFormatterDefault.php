@@ -152,6 +152,8 @@ class ViewfieldFormatterDefault extends FormatterBase {
           '#theme' => 'viewfield_item',
           '#content' => $view->buildRenderable($display_id, $arguments),
           '#delta' => $delta,
+          '#entity' => $entity,
+          '#view_mode' => $this->viewMode,
         );
         if ($include_view_title && (!empty($view->result) || $show_empty_view_title)) {
           $elements[$delta]['#title'] = $view->getTitle() ?: NULL;

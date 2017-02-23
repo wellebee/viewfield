@@ -39,15 +39,16 @@ function viewfield_help($route_name, RouteMatchInterface $route_match) {
 function viewfield_theme() {
   return array(
     'viewfield_item' => array(
-      'variables' => array(
-        'title' => NULL,
-        'content' => NULL,
-        'attributes' => array(),
-        'title_attributes' => array(),
-        'title_prefix' => NULL,
-        'title_suffix' => NULL,
-        'delta' => NULL,
-      ),
+      'render element' => 'element',
+//      'variables' => array(
+//        'title' => NULL,
+//        'content' => NULL,
+//        'attributes' => array(),
+//        'title_attributes' => array(),
+//        'title_prefix' => NULL,
+//        'title_suffix' => NULL,
+//        'delta' => NULL,
+//      ),
     ),
   );
 }
@@ -59,19 +60,16 @@ function viewfield_theme() {
  *
  * @param array $variables
  *   An associative array containing:
- * - title: The title of this item if visible.
- * - content: The content of this item.
- * - attributes: array of HTML attributes populated by modules, intended to
- *   be added to the main container tag of this template.
- * - title_attributes: Same as attributes, except applied to the main title
- *   tag that appears in the template.
- * - title_prefix: Additional output populated by modules, intended to be
- *   displayed in front of the main title tag that appears in the template.
- * - title_suffix: Additional output populated by modules, intended to be
- *   displayed after the main title tag that appears in the template.
- * - delta: Ordinal specifying the item number in the field.
+ *   - element: An element to display in view mode.
  */
 function template_preprocess_viewfield_item(&$variables) {
+  $element = $variables['element'];
+  $variables['title'] = isset($element['#title']) ? $element['#title'] : NULL;
+  $variables['content'] = isset($element['#content']) ? $element['#content'] : NULL;
+  $variables['delta'] = $element['#delta'];
+  $variables['entity'] = $element['#entity'];
+  $variables['view_mode'] = $element['#view_mode'];
+
   $variables['attributes'] = new Attribute($variables['attributes']);
   $classes = array('viewfield-item');
   if (isset($variables['delta'])) {
@@ -80,4 +78,19 @@ function template_preprocess_viewfield_item(&$variables) {
   $variables['attributes']->addClass($classes);
   $variables['title_attributes'] = new Attribute($variables['title_attributes']);
   $variables['title_attributes']->addClass(array('viewfield-title'));
+}
+
+/**
+ * Implements hook_theme_suggestions_HOOK().
+ */
+function viewfield_theme_suggestions_viewfield_item(array $variables) {
+  $suggestions = array();
+  $entity = $variables['element']['#entity'];
+  $sanitized_view_mode = strtr($variables['element']['#view_mode'], '.', '_');
+
+  $suggestions[] = 'viewfield_item__' . $sanitized_view_mode;
+  $suggestions[] = 'viewfield_item__' . $entity->bundle();
+  $suggestions[] = 'viewfield_item__' . $entity->bundle() . '__' . $sanitized_view_mode;
+
+  return $suggestions;
 }
