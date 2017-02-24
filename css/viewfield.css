@@ -1,25 +1,24 @@
 /**
  * @file
- * Styling for viewfields.
+ * Default Viewfield styling.
  */
-.viewfield--item__label {
+
+.viewfield__item__label {
   font-weight: bold;
 }
-
-.viewfield--item--label-inline .viewfield--item__label,
-.viewfield--item--label-inline .viewfield--item__items {
+.viewfield__item--label-inline .viewfield__item__label,
+.viewfield__item--label-inline .views-element-container {
   float: left; /*LTR*/
 }
-.viewfield--item--label-inline .viewfield--item__label,
-.viewfield--item--label-inline > .viewfield--item__item,
-.viewfield--item--label-inline .viewfield--item__items {
+.viewfield__item--label-inline .viewfield__item__label,
+.viewfield__item--label-inline .views-element-container {
   padding-right: 0.5em;
 }
-[dir="rtl"] .viewfield--item--label-inline .viewfield--item__label,
-[dir="rtl"] .viewfield--item--label-inline .viewfield--item__items {
+[dir="rtl"] .viewfield__item--label-inline .viewfield__item__label,
+[dir="rtl"] .viewfield__item--label-inline .views-element-container {
   padding-left: 0.5em;
   padding-right: 0;
 }
-.viewfield--item--label-inline .viewfield--item__label::after {
+.viewfield__item--label-inline .viewfield__item__label::after {
   content: ':';
 }

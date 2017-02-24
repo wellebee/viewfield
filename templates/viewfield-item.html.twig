@@ -3,6 +3,21 @@
  * @file
  * Default theme implementation to display a viewfield item.
  *
+  * Instead of overriding the theming for all fields, you can also just override
+ * theming for a subset of fields using
+ * @link themeable Theme hook suggestions. @endlink For example,
+ * here are some theme hook suggestions that can be used for a field_foo field
+ * on an article node type:
+ * - viewfield-item--my-view--my-view-display.html.twig
+ * - viewfield-item--my-view-display.html.twig
+ * - viewfield-item--my-view.html.twig
+ * - viewfield-item--field-foo--my-view--my-view-display.html.twig
+ * - viewfield-item--field-foo--my-view-display.html.twig
+ * - viewfield-item--field-foo--my-view.html.twig
+ * - viewfield-item--field-foo--2.html.twig
+ * - viewfield-item--field-foo.html.twig
+ * - viewfield-item.html.twig
+ *
  * Available variables:
  * - title: The title of this item if visible.
  * - content: The content of this item.
@@ -25,16 +40,14 @@
 #}
 {%
 set classes = [
-  'viewfield__item',
-  'viewfield--item-label-' ~ label_display,
   'field__item',
-  'field--item-label-' ~ label_display,
+  'viewfield__item',
+  'viewfield__item-label-' ~ label_display,
 ]
 %}
 {%
 set title_classes = [
   'viewfield__item__label',
-  'field__item__label',
   label_display == 'visually_hidden' ? 'visually-hidden',
 ]
 %}

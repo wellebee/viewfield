@@ -54,7 +54,7 @@ class ViewfieldFormatterDefault extends FormatterBase {
       '#title' => $this->t('Empty view title'),
       '#options' => $this->getFieldLabelOptions(),
       '#default_value' => $this->getSetting('empty_view_title'),
-      '#description' => $this->t('Option to render the display view title even when the view produces no results.<br>This option has an effect only when <em>Always build output</em> is also selected.'),
+      '#description' => $this->t('Option to render the view display title even when the view produces no results.<br>This option has an effect only when <em>Always build output</em> is also selected.'),
       '#states' => array('visible' => array(':input[name="' . $always_build_output_name . '"]' => array('checked' => TRUE))),
     );
 
@@ -66,16 +66,18 @@ class ViewfieldFormatterDefault extends FormatterBase {
    */
   public function settingsSummary() {
     $settings = $this->getSettings();
+    $label_options = $this->getFieldLabelOptions();
     $summary = array();
+
     $summary[] = $this->t('View title: @view_title', array(
-      '@view_title' => $this->getFieldLabelOptions()[$settings['view_title']],
+      '@view_title' => $label_options[$settings['view_title']],
     ));
     $summary[] = $this->t('Always build output: @always_build_output', array(
       '@always_build_output' => $this->getCheckboxLabel($settings['always_build_output']),
     ));
     if ($settings['always_build_output']) {
       $summary[] = $this->t('Show empty view title: @show_empty_view_title', array(
-        '@show_empty_view_title' => $this->getFieldLabelOptions()[$settings['empty_view_title']],
+        '@show_empty_view_title' => $label_options[$settings['empty_view_title']],
       ));
     }
 
@@ -89,6 +91,8 @@ class ViewfieldFormatterDefault extends FormatterBase {
     $elements = parent::view($items, $langcode);
     $elements['#theme'] = 'viewfield';
     $elements['#entity'] = $items->getEntity();
+    $elements['#entity_type'] = $items->getEntity()->getEntityTypeId();
+    $elements['#bundle'] = $items->getEntity()->bundle();
     $elements['#view_mode'] = $this->viewMode;
     $elements['#attached']['library'][] = 'viewfield/viewfield';
 
@@ -122,6 +126,7 @@ class ViewfieldFormatterDefault extends FormatterBase {
     $view_title = $this->getSetting('view_title');
     $empty_view_title = $this->getSetting('empty_view_title');
     $elements = array();
+
     foreach ($values as $delta => $value) {
       $target_id = $value['target_id'];
       $display_id = $value['display_id'];

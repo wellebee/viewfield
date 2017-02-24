@@ -6,7 +6,6 @@
  */
 
 use Drupal\Core\Routing\RouteMatchInterface;
-use Drupal\Core\Template\Attribute;
 
 /**
  * Implements hook_help().
@@ -66,6 +65,7 @@ function template_preprocess_viewfield(&$variables, $hook) {
   // Creating variables for the template.
   $variables['entity'] = $element['#entity'];
   $variables['entity_type'] = $element['#entity_type'];
+  $variables['bundle'] = $element['#bundle'];
   $variables['view_mode'] = $element['#view_mode'];
   $variables['field_name'] = $element['#field_name'];
   $variables['field_type'] = $element['#field_type'];
@@ -154,14 +154,14 @@ function viewfield_theme_suggestions_viewfield_item(array $variables) {
   $suggestions = array();
   $element = $variables['element'];
 
-  $suggestions[] = 'viewfield__item__' . $element['#field_name'];
-  $suggestions[] = 'viewfield__item__' . $element['#field_name'] . '__' . $element['#delta'];
-  $suggestions[] = 'viewfield__item__' . $element['#field_name'] . '__' . $element['#view_id'];
-  $suggestions[] = 'viewfield__item__' . $element['#field_name'] . '__' . $element['#display_id'];
-  $suggestions[] = 'viewfield__item__' . $element['#field_name'] . '__' . $element['#view_id'] . '__' . $element['#display_id'];
-  $suggestions[] = 'viewfield__item__' . $element['#view_id'];
-  $suggestions[] = 'viewfield__item__' . $element['#view_id'] . '__' . $element['#display_id'];
-  $suggestions[] = 'viewfield__item__' . $element['#display_id'];
+  $suggestions[] = 'viewfield_item__' . $element['#field_name'];
+  $suggestions[] = 'viewfield_item__' . $element['#field_name'] . '__' . ($element['#delta'] + 1);
+  $suggestions[] = 'viewfield_item__' . $element['#field_name'] . '__' . $element['#view_id'];
+  $suggestions[] = 'viewfield_item__' . $element['#field_name'] . '__' . $element['#display_id'];
+  $suggestions[] = 'viewfield_item__' . $element['#field_name'] . '__' . $element['#view_id'] . '__' . $element['#display_id'];
+  $suggestions[] = 'viewfield_item__' . $element['#view_id'];
+  $suggestions[] = 'viewfield_item__' . $element['#view_id'] . '__' . $element['#display_id'];
+  $suggestions[] = 'viewfield_item__' . $element['#display_id'];
 
   return $suggestions;
 }
