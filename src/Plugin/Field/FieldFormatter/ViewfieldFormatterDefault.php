@@ -146,6 +146,9 @@ class ViewfieldFormatterDefault extends FormatterBase {
           '#title' => $view->getTitle(),
           '#label_display' => empty($view->result) ? $empty_view_title : $view_title,
           '#delta' => $delta,
+          '#field_name' => $this->fieldDefinition->getName(),
+          '#view_id' => $view->id(),
+          '#display_id' => $display_id,
         );
       }
     }

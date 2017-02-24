@@ -121,7 +121,6 @@ function viewfield_theme_suggestions_viewfield(array $variables) {
   $suggestions = array();
   $element = $variables['element'];
 
-  $suggestions[] = 'viewfield__' . $element['#field_type'];
   $suggestions[] = 'viewfield__' . $element['#field_name'];
   $suggestions[] = 'viewfield__' . $element['#entity_type'] . '__' . $element['#bundle'];
   $suggestions[] = 'viewfield__' . $element['#entity_type'] . '__' . $element['#field_name'];
@@ -146,4 +145,23 @@ function template_preprocess_viewfield_item(&$variables) {
   $variables['label'] = $element['#title'];
   $variables['content'] = $element['#content'];
   $variables['delta'] = $element['#delta'];
+}
+
+/**
+ * Implements hook_theme_suggestions_HOOK().
+ */
+function viewfield_theme_suggestions_viewfield_item(array $variables) {
+  $suggestions = array();
+  $element = $variables['element'];
+
+  $suggestions[] = 'viewfield__item__' . $element['#field_name'];
+  $suggestions[] = 'viewfield__item__' . $element['#field_name'] . '__' . $element['#delta'];
+  $suggestions[] = 'viewfield__item__' . $element['#field_name'] . '__' . $element['#view_id'];
+  $suggestions[] = 'viewfield__item__' . $element['#field_name'] . '__' . $element['#display_id'];
+  $suggestions[] = 'viewfield__item__' . $element['#field_name'] . '__' . $element['#view_id'] . '__' . $element['#display_id'];
+  $suggestions[] = 'viewfield__item__' . $element['#view_id'];
+  $suggestions[] = 'viewfield__item__' . $element['#view_id'] . '__' . $element['#display_id'];
+  $suggestions[] = 'viewfield__item__' . $element['#display_id'];
+
+  return $suggestions;
 }
