@@ -22,8 +22,8 @@ class ViewfieldFormatterDefault extends FormatterBase {
    */
   public static function defaultSettings() {
     return array(
-      'always_build_output' => 0,
       'view_title' => 'hidden',
+      'always_build_output' => 0,
       'empty_view_title' => 'hidden',
     ) + parent::defaultSettings();
   }
@@ -34,19 +34,18 @@ class ViewfieldFormatterDefault extends FormatterBase {
   public function settingsForm(array $form, FormStateInterface $form_state) {
     $form = parent::settingsForm($form, $form_state);
 
-    $form['always_build_output'] = array(
-      '#type' => 'checkbox',
-      '#title' => $this->t('Always build output'),
-      '#default_value' => $this->getSetting('always_build_output'),
-      '#description' => $this->t('Produce rendered output even if the view produces no results.<br>This option may be useful for some specialized cases, e.g., to force rendering of an attachment display even if there are no view results.'),
-    );
-
     $form['view_title'] = array(
       '#type' => 'select',
       '#title' => $this->t('View title'),
       '#options' => $this->getFieldLabelOptions(),
       '#default_value' => $this->getSetting('view_title'),
-      '#description' => $this->t('Option to render the view display title in the output.'),
+      '#description' => $this->t('Option to render the view display title.'),
+    );
+    $form['always_build_output'] = array(
+      '#type' => 'checkbox',
+      '#title' => $this->t('Always build output'),
+      '#default_value' => $this->getSetting('always_build_output'),
+      '#description' => $this->t('Produce rendered output even if the view produces no results.<br>This option may be useful for some specialized cases, e.g., to force rendering of an attachment display even if there are no view results.'),
     );
 
     $always_build_output_name = 'fields[' . $this->fieldDefinition->getName() . '][settings_edit_form][settings][always_build_output]';
@@ -55,7 +54,7 @@ class ViewfieldFormatterDefault extends FormatterBase {
       '#title' => $this->t('Empty view title'),
       '#options' => $this->getFieldLabelOptions(),
       '#default_value' => $this->getSetting('empty_view_title'),
-      '#description' => $this->t('Option to render the view title even when the view produces no results.<br>This option has an effect only when <em>Always build output</em> is also selected.'),
+      '#description' => $this->t('Option to render the display view title even when the view produces no results.<br>This option has an effect only when <em>Always build output</em> is also selected.'),
       '#states' => array('visible' => array(':input[name="' . $always_build_output_name . '"]' => array('checked' => TRUE))),
     );
 
@@ -68,15 +67,17 @@ class ViewfieldFormatterDefault extends FormatterBase {
   public function settingsSummary() {
     $settings = $this->getSettings();
     $summary = array();
-    $summary[] = $this->t('Always build output: @always_build_output', array(
-      '@always_build_output' => $this->getCheckboxLabel($settings['always_build_output']),
-    ));
     $summary[] = $this->t('View title: @view_title', array(
       '@view_title' => $this->getFieldLabelOptions()[$settings['view_title']],
     ));
-    $summary[] = $this->t('Show empty view title: @show_empty_view_title', array(
-      '@show_empty_view_title' => $this->getFieldLabelOptions()[$settings['empty_view_title']],
+    $summary[] = $this->t('Always build output: @always_build_output', array(
+      '@always_build_output' => $this->getCheckboxLabel($settings['always_build_output']),
     ));
+    if ($settings['always_build_output']) {
+      $summary[] = $this->t('Show empty view title: @show_empty_view_title', array(
+        '@show_empty_view_title' => $this->getFieldLabelOptions()[$settings['empty_view_title']],
+      ));
+    }
 
     return $summary;
   }
