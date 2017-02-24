@@ -94,7 +94,6 @@ class ViewfieldFormatterDefault extends FormatterBase {
     $elements['#entity_type'] = $items->getEntity()->getEntityTypeId();
     $elements['#bundle'] = $items->getEntity()->bundle();
     $elements['#view_mode'] = $this->viewMode;
-    $elements['#attached']['library'][] = 'viewfield/viewfield';
 
     return $elements;
   }
