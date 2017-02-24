@@ -1,6 +1,6 @@
 ### About
 
-The viewfield module defines an entity reference field type to display a view. Viewfield enables an administrator or content author to integrate a views display into any fieldable entity, such as content, users or paragraphs. In addition, through the use of the **Always use default value** setting, the same view may automatically be placed into all entities in a bundle. Viewfield has helpful theming support, making it easy to customize presentation.
+The viewfield module defines an entity reference field type to display a view. Viewfield enables an administrator or content author to integrate a views display into any fieldable entity, such as content, users or paragraphs. In addition, through the use of the **Always use default value** setting, the same view may automatically be placed into all entities in a bundle. Viewfield has considerable theming support, making it easy to customize presentation.
 
 ### Field Configuration
 
@@ -22,7 +22,7 @@ Assigning a value (or default value) to a Viewfield consists of selecting a View
 ### Output and Theming
 Viewfield has extensive theming support. The default formatter supports the following settings:
 
-- **Include view title**
+- **View title**
 Options to render the view display title in the output. Choose from *Above*, *Inline*, *Hidden*, *Visually Hidden*.
 - **Always build output**
 Produce rendered output even if the view produces no results.
@@ -30,4 +30,14 @@ This option may be useful for some specialized cases, e.g., to force rendering o
 - **Empty view title**
 Options to render the view display title even when the view produces no results. Choose from *Above*, *Inline*, *Hidden*, *Visually Hidden*. This option has an effect only when **Always build output** is selected.
 
-Each Viewfield item (value) is themed with the `viewfield.html.twig` and `viewfield-item.html.twig` templates, which may be overridden. Enable twig debugging to view file name suggestions in the rendered HTML.
+Viewfield provides default theming with the `viewfield.html.twig` and `viewfield-item.html.twig` templates, which may be overridden. Enable Twig debugging to view file name suggestions in the rendered HTML.
+
+The Viewfield templates provide the standard CSS field classes, e.g., `field`, `field__label`, `field__items`, and `field__item`, and introduce three more: `viewfield__items`, `viewfield__item`, and `viewfield__item__label`. If **View title** is any value but *Hidden*, each view title will be rendered with the `viewfield__item__label` class.
+
+Viewfield does not provide any CSS styles, since Drupal core does not provide default styling for fields. Styling for fields is provided by the site theme. For example, the Classy theme field styles are found in `core/themes/classy/css/components/field.css`. To style a `viewfield__item__label` to appear the same as `field__label` with the Classy theme, we could use the CSS rule:
+
+```
+.viewfield__item__label {
+  font-weight: bold;
+}
+```
