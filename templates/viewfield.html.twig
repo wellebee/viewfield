@@ -51,31 +51,19 @@
   ]
 %}
 
-{% if label_hidden %}
-  <div{{ attributes.addClass(classes) }}>
-    {% if multiple %}
-    <div class="field__items">
-      {% endif %}
-      {% for item in items %}
-        {{ item }}
-      {% endfor %}
-      {% if multiple %}
-    </div>
-    {% endif %}
-  </div>
-{% else %}
-  <div{{ attributes.addClass(classes) }}>
-    {{ title_prefix }}
+<div{{ attributes.addClass(classes) }}>
+  {{ title_prefix }}
+  {% if not label_hidden %}
     <div{{ title_attributes.addClass(title_classes) }}>{{ label }}</div>
-    {{ title_suffix }}
-    {% if multiple %}
-      <div class="field__items">
-    {% endif %}
-    {% for item in items %}
-      {{ item }}
-    {% endfor %}
-    {% if multiple %}
-      </div>
-    {% endif %}
-  </div>
-{% endif %}
+  {% endif %}
+  {{ title_suffix }}
+  {% if multiple %}
+    <div class="field__items">
+  {% endif %}
+  {% for item in items %}
+    {{ item }}
+  {% endfor %}
+  {% if multiple %}
+    </div>
+  {% endif %}
+</div>
