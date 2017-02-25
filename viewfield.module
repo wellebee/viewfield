@@ -13,23 +13,50 @@ use Drupal\Core\Routing\RouteMatchInterface;
 function viewfield_help($route_name, RouteMatchInterface $route_match) {
   switch ($route_name) {
     case 'help.page.viewfield':
-      $text = file_get_contents(dirname(__FILE__) . "/README.md");
-      if (!\Drupal::moduleHandler()->moduleExists('markdown')) {
-        $header = '<p><strong>Want to see this page with proper formatting? Install the <a href="https://www.drupal.org/project/markdown">markdown</a> module.</strong></p>';
-        return '<pre>' . $header . $text . '</pre>';
-      }
-      else {
-        // Use the Markdown filter to render the README.
-        $filter_manager = \Drupal::service('plugin.manager.filter');
-        $settings = \Drupal::configFactory()
-          ->get('markdown.settings')
-          ->getRawData();
-        $config = array('settings' => $settings);
-        $filter = $filter_manager->createInstance('markdown', $config);
-        return $filter->process($text, 'en');
-      }
+      $output = '';
+      $output .= '<h3>' . t('About') . '</h3>';
+
+      $output .= '<p>' . t('The Viewfield module defines an entity reference field type to display a view.  Viewfield enables an administrator or content author to integrate a views display into any fieldable entity, such as content, users or paragraphs. In addition, through the use of the <em>Always use default value</em> setting, the same view may automatically be placed into all entities in a bundle. Viewfield has considerable theming support, making it easy to customize presentation. See the <a href=":field">Field module help</a> and the <a href=":field_ui">Field UI help</a> pages for general information on fields and how to create and manage them. For more information, see the <a href=":link_documentation">online documentation for the Viewfield module</a>.', array(':field' => \Drupal::url('help.page', array('name' => 'field')), ':field_ui' => (\Drupal::moduleHandler()->moduleExists('field_ui')) ? \Drupal::url('help.page', array('name' => 'field_ui')) : '#', ':link_documentation' => 'https://www.drupal.org/node/1210138')) . '</p>';
+
+      $output .= '<h3>' . t('Uses') . '</h3>';
+      $output .= '<dl>';
+
+      $output .= '<dt>' . t('Managing and displaying Viewfields') . '</dt>';
+      $output .= '<dd>' . t('The <em>settings</em> and the <em>display</em> of the Viewfield can be configured separately. See the <a href=":field_ui">Field UI help</a> for more information on how to manage fields and their display.', array(':field_ui' => (\Drupal::moduleHandler()->moduleExists('field_ui')) ? \Drupal::url('help.page', array('name' => 'field_ui')) : '#')) . '</dd>';
+
+      $output .= '<dt>' . t('Adding a Viewfield') . '</dt>';
+      $output .= '<dd>' . t('Edit the content or other entity type and navigate to the <em>Manage Fields</em> tab. Choose <em>+ Add Field</em> and select <em>Viewfield</em> under the <em>Reference</em> category. Choose the number of field values (distinct view displays) you want to store and press <em>Save Field Settings</em>.') . '</dd>';
+
+      $output .= '<dt>' . t('Assigning field values') . '</dt>';
+      $output .= '<dd>' . t('Assigning a value (or default value) to a Viewfield consists of selecting a View and Display from the select boxes, and providing an optional comma-delimited list of arguments (contextual filters) for the display. The argument list may contain tokens. Token help is available by clicking on the <em>Browse available tokens</em> link shown below the arguments field.') . '</dd>';
+
+      $output .= '<dt>' . t('Always use default value setting') . '</dt>';
+      $output .= '<dd>' . t('In <em>field settings</em>, checking <em>Always use default value</em> means the Viewfield will always use the provided default value(s) when rendering the field, and this field will be hidden in all content editing forms, making it unnecessary to assign values individually to each piece of content. Nice! If this is checked, a default value <strong>must</strong> be provided.') . '</dd>';
+
+      $output .= '<dt>' . t('Allowed views setting') . '</dt>';
+      $output .= '<dd>' . t('In <em>field settings</em>, check one or more views to restrict the views available for content authors. Leave all items unchecked to allow all views.') . '</dd>';
+
+      $output .= '<dt>' . t('Allowed view display types setting') . '</dt>';
+      $output .= '<dd>' . t('In <em>field settings</em>, check one or more display types to restrict the view display types available for content authors. Leave all items unchecked to allow all display types.') . '</dd>';
+
+      $output .= '<dt>' . t('View title setting') . '</dt>';
+      $output .= '<dd>' . t('On the <em>Manage display</em> page are options to render the view display title in the output. Choose from <em>Above</em>, <em>Inline</em>, <em>Hidden</em>, <em>Visually Hidden</em>.') . '</dd>';
+
+      $output .= '<dt>' . t('Always build output setting') . '</dt>';
+      $output .= '<dd>' . t('On the <em>Manage display</em> page is a setting to produce rendered output even if the view produces no results. This option may be useful for some specialized cases, e.g., to force rendering of an attachment display even if there are no view results.') . '</dd>';
+
+      $output .= '<dt>' . t('Empty view title setting') . '</dt>';
+      $output .= '<dd>' . t('On the <em>Manage display</em> page are options to render the view display title even when the view produces no results. Choose from <em>Above</em>, <em>Inline</em>, <em>Hidden</em>, <em>Visually Hidden</em>. This option has an effect only when <em>Always build output</em> is selected.') . '</dd>';
+
+      $output .= '<dt>' . t('Twig theming') . '</dt>';
+      $output .= '<dd>' . t('Viewfield provides default theming with the <code>viewfield.html.twig</code> and <code>viewfield-item.html.twig</code> templates, which may each be overridden. Enable Twig debugging to view file name suggestions in the rendered HTML.') . '</dd>';
+
+      $output .= '<dt>' . t('CSS styling') . '</dt>';
+      $output .= '<dd>' . t('In addition to the core field CSS classes, Viewfield adds <code>field__item__label</code> for view titles. Because Drupal core does not provide default styling for fields, Viewfield likewise does not provide any CSS styles. Themes must provide their own styling for the <code>field__item__label</code> class.') . '</dd>';
+
+      $output .= '</dl>';
+      return $output;
   }
-  return NULL;
 }
 
 /**
