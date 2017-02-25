@@ -93,6 +93,8 @@ class ViewfieldFormatterDefault extends FormatterBase {
     $elements['#entity'] = $items->getEntity();
     $elements['#entity_type'] = $items->getEntity()->getEntityTypeId();
     $elements['#bundle'] = $items->getEntity()->bundle();
+    $elements['#field_name'] = $this->fieldDefinition->getName();
+    $elements['#field_type'] = $this->fieldDefinition->getType();
     $elements['#view_mode'] = $this->viewMode;
 
     return $elements;

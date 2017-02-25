@@ -14,7 +14,7 @@ use Drupal\views\Views;
 /**
  * @FieldWidget(
  *   id = "viewfield_select",
- *   label = @Translation("Viewfield select"),
+ *   label = @Translation("Viewfield"),
  *   field_types = {"viewfield"}
  * )
  */
