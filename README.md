@@ -32,12 +32,14 @@ Options to render the view display title even when the view produces no results.
 
 Viewfield provides default theming with the `viewfield.html.twig` and `viewfield-item.html.twig` templates, which may be overridden. Enable Twig debugging to view file name suggestions in the rendered HTML.
 
-The Viewfield templates provide the standard CSS field classes, e.g., `field`, `field__label`, `field__items`, and `field__item`, and introduce three more: `viewfield__items`, `viewfield__item`, and `viewfield__item__label`. If **View title** is any value but *Hidden*, each view title will be rendered with the `viewfield__item__label` class.
+The Viewfield templates employ the core field CSS classes: `field`, `field__label`, `field__items`, and `field__item`, and introduce one new one: `field__item__label`. If **View title** is any value but *Hidden*, each view display title will be rendered with the `field__item__label` class.
 
-Viewfield does not provide any CSS styles, since Drupal core does not provide default styling for fields. Styling for fields is provided by the site theme. For example, the Classy theme field styles are found in `core/themes/classy/css/components/field.css`. To style a `viewfield__item__label` to appear the same as `field__label` with the Classy theme, we could use the CSS rule:
+Viewfield does not provide any CSS styles, since Drupal core does not provide default styling for fields. In Drupal, styling for fields is provided by the site theme. To help style `field__item__label` components, we can look at the way the site theme treats `field__label` components, and add our own similar styling for `field_item_label`.
+
+For example, the Classy theme field styles are found in `core/themes/classy/css/components/field.css`. Looking in that file for how `field__label` is styled, we can derive the the following CSS rule to make `field__item__label` to appear visually identitical:
 
 ```
-.viewfield__item__label {
+.field__item__label {
   font-weight: bold;
 }
 ```
