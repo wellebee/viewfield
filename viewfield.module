@@ -96,14 +96,14 @@ function template_preprocess_viewfield(&$variables, $hook) {
   $variables['view_mode'] = $element['#view_mode'];
   $variables['field_name'] = $element['#field_name'];
   $variables['field_type'] = $element['#field_type'];
-  $variables['label_display'] = $element['#label_display'];
-  $variables['label_hidden'] = ($element['#label_display'] == 'hidden');
+  $variables['label_display'] = isset($element['#label_display']) ? $element['#label_display'] : NULL;
+  $variables['label_hidden'] = ($variables['label_display'] == 'hidden');
   // Always set the field label - allow themes to decide whether to display it.
   // In addition the label should be rendered but hidden to support screen
   // readers.
-  $variables['label'] = $element['#title'];
+  $variables['label'] = isset($element['#title']) ? $element['#title'] : NULL;
 
-  $variables['multiple'] = $element['#is_multiple'];
+  $variables['multiple'] = isset($element['#is_multiple']) ? $element['#is_multiple'] : NULL;
 
 //  static $default_attributes;
 //  if (!isset($default_attributes)) {
