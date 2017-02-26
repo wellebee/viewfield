@@ -51,6 +51,9 @@ class ViewfieldWidgetSelect extends OptionsSelectWidget {
     }
     $element['target_id']['#options'] = array_merge($none_option, $allowed_views_options);
     $element['target_id']['#multiple'] = FALSE;
+    // #default_value needs special handling, otherwise it consists of an array
+    // of values corresponding, one for each #delta.
+    $element['target_id']['#default_value'] = NULL;
 
     // Build an array of keys to retrieve values from $form_state.
     $form_state_keys = array($this->fieldDefinition->getName(), $delta);
@@ -65,14 +68,23 @@ class ViewfieldWidgetSelect extends OptionsSelectWidget {
     $default_display_id = NULL;
     $default_arguments = NULL;
     // Use form state values if available when Ajax callback has run.
-    if (isset($form_state_value['target_id']) || $form_state->getTriggeringElement()) {
+    $triggering_element = $form_state->getTriggeringElement();
+    if (isset($triggering_element['#type']) && isset($triggering_element['#key_column'])
+        && $triggering_element['#type'] == 'select' && $triggering_element['#key_column'] == 'target_id') {
       if (isset($form_state_value['target_id'])) {
+        $element['target_id']['#default_value'] = $form_state_value['target_id'];
         $display_id_options = $this->getViewDisplayOptions($form_state_value['target_id']);
-        $default_display_id = $form_state_value['display_id'];
+        if ((isset($display_id_options[$form_state_value['display_id']]))) {
+          $default_display_id = $form_state_value['display_id'];
+        }
+        elseif (!empty($display_id_options)) {
+          $default_display_id = current(array_keys($display_id_options));
+        }
         $default_arguments = $form_state_value['arguments'];
       }
     }
     elseif (isset($item_value['target_id'])) {
+      $element['target_id']['#default_value'] = $item_value['target_id'];
       $display_id_options = $this->getViewDisplayOptions($item_value['target_id']);
       $default_display_id = $item_value['display_id'];
       $default_arguments = $item_value['arguments'];
