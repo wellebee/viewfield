@@ -166,7 +166,15 @@ function viewfield_theme_suggestions_viewfield(array $variables) {
  *   - element: An element to display in view mode.
  */
 function template_preprocess_viewfield_item(&$variables) {
-  $element = $variables['element'];
+  $element = &$variables['element'];
+
+  $element['#contextual_links'] = array(
+    'viewfield_item' => array(
+      'route_parameters' => array(
+        'view' => $element['#view_id'],
+        'display_id' => $element['#display_id'],
+  )));
+
   $variables['label_display'] = $element['#label_display'];
   $variables['label_hidden'] = ($element['#label_display'] == 'hidden');
   $variables['label'] = $element['#title'];

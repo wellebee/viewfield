@@ -155,13 +155,6 @@ class ViewfieldFormatterDefault extends FormatterBase {
           '#field_name' => $this->fieldDefinition->getName(),
           '#view_id' => $view->id(),
           '#display_id' => $display_id,
-          '#contextual_links' => array(
-            'viewfield_item' => array(
-              'route_parameters' => array(
-                'view' => $target_id,
-                'display_id' => $display_id,
-                ),
-          )),
         );
       }
     }

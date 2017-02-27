@@ -53,9 +53,6 @@ class ViewfieldWidgetSelect extends OptionsSelectWidget {
     }
     $element['target_id']['#options'] = array_merge($none_option, $allowed_views_options);
     $element['target_id']['#multiple'] = FALSE;
-    // #default_value needs special handling, otherwise it consists of an array
-    // of values corresponding to field items, one for each #delta.
-    $element['target_id']['#default_value'] = NULL;
 
     // Build an array of keys to retrieve values from $form_state.
     $form_state_keys = array($this->fieldDefinition->getName(), $delta);
@@ -64,17 +61,17 @@ class ViewfieldWidgetSelect extends OptionsSelectWidget {
     }
 
     // Assign default values.
+    $default_target_id = NULL;
     $display_id_options = NULL;
     $default_display_id = NULL;
     $default_arguments = NULL;
     $item_value = $items[$delta]->getValue();
     $triggering_element = $form_state->getTriggeringElement();
+    // Use form state values if available when Ajax callback has run.
     if (isset($triggering_element['#field_type']) && $triggering_element['#field_type'] == $field_type) {
-      // Use form state values if available when Ajax callback has run.
       $form_state_value = $form_state->getValue($form_state_keys);
       if (isset($form_state_value['target_id'])) {
-        // Assign valid default value.
-        $element['target_id']['#default_value'] = $form_state_value['target_id'];
+        $default_target_id = $form_state_value['target_id'];
         $display_id_options = $this->getViewDisplayOptions($form_state_value['target_id']);
         // Set current default value if valid, otherwise use the first option.
         if (isset($display_id_options[$form_state_value['display_id']])) {
@@ -87,12 +84,15 @@ class ViewfieldWidgetSelect extends OptionsSelectWidget {
       }
     }
     elseif (isset($item_value['target_id'])) {
-      // Assign valid default value.
-      $element['target_id']['#default_value'] = $item_value['target_id'];
+      $default_target_id = $item_value['target_id'];
       $display_id_options = $this->getViewDisplayOptions($item_value['target_id']);
       $default_display_id = $item_value['display_id'];
       $default_arguments = $item_value['arguments'];
     }
+
+    // #default_value needs special handling, otherwise it consists of an array
+    // of values corresponding to field items, one for each #delta.
+    $element['target_id']['#default_value'] = $default_target_id;
 
     // Construct CSS class to target ajax callback.
     $display_id_class = $this->createDisplayClass($form_state_keys);
