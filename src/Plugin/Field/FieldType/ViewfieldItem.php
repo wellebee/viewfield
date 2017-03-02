@@ -175,7 +175,7 @@ class ViewfieldItem extends EntityReferenceItem {
     $display_type_options = array();
     foreach (Views::pluginList() as $key => $type) {
       if ($type['type'] == 'display') {
-        $display_type_options[str_replace('display:', '', $key)] = FieldFilteredMarkup::create($type['title']->render());
+        $display_type_options[str_replace('display:', '', $key)] = FieldFilteredMarkup::create($type['title']);
       }
     }
     natcasesort($display_type_options);

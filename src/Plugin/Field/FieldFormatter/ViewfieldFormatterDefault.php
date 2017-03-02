@@ -69,7 +69,7 @@ class ViewfieldFormatterDefault extends FormatterBase {
     $label_options = $this->getFieldLabelOptions();
     $summary = array();
 
-    $summary[] = $this->t('View title: @view_title', array(
+    $summary[] = $this->t('Show view title: @view_title', array(
       '@view_title' => $label_options[$settings['view_title']],
     ));
     $summary[] = $this->t('Always build output: @always_build_output', array(

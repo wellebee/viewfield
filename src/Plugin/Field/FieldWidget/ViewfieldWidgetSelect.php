@@ -48,8 +48,7 @@ class ViewfieldWidgetSelect extends OptionsSelectWidget {
     $allowed_views_options = array_intersect_key(ViewfieldItem::getViewsOptions(), array_filter($this->getFieldSetting('allowed_views')));
     if (empty($allowed_views_options)) {
       // At this point, empty $allowed_views_options means allow all.
-      $allowed_views_options = $element['target_id']['#options'];
-      natcasesort($allowed_views_options);
+      $allowed_views_options = ViewfieldItem::getViewsOptions();
     }
     $element['target_id']['#options'] = array_merge($none_option, $allowed_views_options);
     $element['target_id']['#multiple'] = FALSE;
