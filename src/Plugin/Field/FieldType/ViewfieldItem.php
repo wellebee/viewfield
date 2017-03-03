@@ -49,9 +49,10 @@ class ViewfieldItem extends EntityReferenceItem {
    */
   public static function schema(FieldStorageDefinitionInterface $field_definition) {
     $schema = parent::schema($field_definition);
+    $schema['columns']['target_id']['description'] = 'The ID of the view.';
 
     $schema['columns']['display_id'] = array(
-      'description' => 'The ID of the display.',
+      'description' => 'The ID of the view display.',
       'type' => 'varchar',
       'length' => 255,
     );
@@ -70,10 +71,11 @@ class ViewfieldItem extends EntityReferenceItem {
    */
   public static function propertyDefinitions(FieldStorageDefinitionInterface $field_definition) {
     $properties = parent::propertyDefinitions($field_definition);
+    $properties['entity']->setDescription(t('The referenced view'));
 
     $properties['display_id'] = DataDefinition::create('string')
-      ->setLabel(t('Display Id'))
-      ->setDescription(t('The referenced display ID'));
+      ->setLabel(t('Display ID'))
+      ->setDescription(t('The view display ID'));
 
     $properties['arguments'] = DataDefinition::create('string')
       ->setLabel(t('Arguments'))
@@ -103,7 +105,7 @@ class ViewfieldItem extends EntityReferenceItem {
       '#type' => 'checkbox',
       '#title' => $this->t('Always use default value'),
       '#default_value' => $this->getSetting('force_default'),
-      '#description' => $this->t('Hides this field in forms and enforces the configured default value for all entities in the bundle, making it unnecessary to assign values individually to each one.<br>If this is checked, you must provide a default value.'),
+      '#description' => $this->t('Hides this field in entity edit forms and enforces the configured default value for all entities in the bundle, making it unnecessary to assign values individually to each one.<br>If this is checked, you must provide a default value.'),
     );
 
     $form['allowed_views'] = array(

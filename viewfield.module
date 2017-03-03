@@ -31,7 +31,7 @@ function viewfield_help($route_name, RouteMatchInterface $route_match) {
       $output .= '<dd>' . t('Assigning a value (or default value) to a Viewfield consists of selecting a View and Display from the select boxes, and providing an optional comma-delimited list of arguments (contextual filters) for the display. The argument list may contain tokens. Token help is available by clicking on the <em>Browse available tokens</em> link shown below the arguments field.') . '</dd>';
 
       $output .= '<dt>' . t('Always use default value setting') . '</dt>';
-      $output .= '<dd>' . t('In <em>field settings</em>, checking <em>Always use default value</em> means the Viewfield will always use the provided default value(s) when rendering the field, and this field will be hidden in all content editing forms, making it unnecessary to assign values individually to each piece of content. Nice! If this is checked, a default value <strong>must</strong> be provided.') . '</dd>';
+      $output .= '<dd>' . t('In <em>field settings</em>, checking <em>Always use default value</em> means the Viewfield will always use the provided default value(s) when rendering the field, and this field will be hidden in all entity edit forms, making it unnecessary to assign values individually to each piece of content. Nice! If this is checked, a default value <strong>must</strong> be provided.') . '</dd>';
 
       $output .= '<dt>' . t('Allowed views setting') . '</dt>';
       $output .= '<dd>' . t('In <em>field settings</em>, check one or more views to restrict the views available for content authors. Leave all items unchecked to allow all views.') . '</dd>';

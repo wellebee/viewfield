@@ -13,7 +13,7 @@ Assigning field values
 Assigning a value (or default value) to a Viewfield consists of selecting a View and Display from the select boxes, and providing an optional comma-delimited list of arguments (contextual filters) for the display. The argument list may contain tokens. Token help is available by clicking on the <em>Browse available tokens</em> link shown below the arguments field.
 
 Always use default value setting
-In <em>field settings</em>, checking <em>Always use default value</em> means the Viewfield will always use the provided default value(s) when rendering the field, and this field will be hidden in all content editing forms, making it unnecessary to assign values individually to each piece of content. Nice! If this is checked, a default value <strong>must</strong> be provided.
+In <em>field settings</em>, checking <em>Always use default value</em> means the Viewfield will always use the provided default value(s) when rendering the field, and this field will be hidden in all entity edit forms, making it unnecessary to assign values individually to each piece of content. Nice! If this is checked, a default value <strong>must</strong> be provided.
 
 Allowed views setting
 In <em>field settings</em>, check one or more views to restrict the views available for content authors. Leave all items unchecked to allow all views.
