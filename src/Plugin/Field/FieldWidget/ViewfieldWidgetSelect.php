@@ -5,11 +5,8 @@ namespace Drupal\viewfield\Plugin\Field\FieldWidget;
 use Drupal\Core\Field\Plugin\Field\FieldWidget\OptionsSelectWidget;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Field\FieldFilteredMarkup;
-use Drupal\viewfield\Plugin\Field\FieldType\ViewfieldItem;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\HtmlCommand;
-use Drupal\views\Views;
 
 /**
  * @FieldWidget(
@@ -27,13 +24,15 @@ class ViewfieldWidgetSelect extends OptionsSelectWidget {
     // Must always show fields on configuration form.
     $force_default = !$this->isDefaultValueWidget($form_state) ? $this->getFieldSetting('force_default') : FALSE;
     $field_type = $this->fieldDefinition->getType();
+    $item = $items[$delta];
 
     $element = array('target_id' => parent::formElement($items, $delta, $element, $form, $form_state));
     $element['target_id']['#field_type'] = $field_type;
+    $element['target_id']['#field_item'] = $item;
     $element['target_id']['#description'] = $this->t('View name.');
     $element['target_id']['#access'] = !$force_default;
     $element['target_id']['#ajax'] = array(
-      'callback' => array($this, 'ajaxGetViewDisplayOptions'),
+      'callback' => array($this, 'ajaxGetAllowedDisplayOptions'),
       'event' => 'change',
       'progress' => array(
         'type' => 'throbber',
@@ -45,11 +44,7 @@ class ViewfieldWidgetSelect extends OptionsSelectWidget {
     $empty_label = $this->getEmptyLabel() ?: $this->t('- None -');
     // Always allow '_none' for non-required fields or second and greater delta.
     $none_option = (!$this->fieldDefinition->isRequired() || $delta > 0) ? array('_none' => $empty_label) : array();
-    $allowed_views_options = array_intersect_key(ViewfieldItem::getViewsOptions(), array_filter($this->getFieldSetting('allowed_views')));
-    if (empty($allowed_views_options)) {
-      // At this point, empty $allowed_views_options means allow all.
-      $allowed_views_options = ViewfieldItem::getViewsOptions();
-    }
+    $allowed_views_options = $item->getAllowedViewOptions();
     $element['target_id']['#options'] = array_merge($none_option, $allowed_views_options);
     $element['target_id']['#multiple'] = FALSE;
 
@@ -71,7 +66,7 @@ class ViewfieldWidgetSelect extends OptionsSelectWidget {
       $form_state_value = $form_state->getValue($form_state_keys);
       if (isset($form_state_value['target_id'])) {
         $default_target_id = $form_state_value['target_id'];
-        $display_id_options = $this->getViewDisplayOptions($form_state_value['target_id']);
+        $display_id_options = $item->getAllowedDisplayOptions($form_state_value['target_id']);
         // Set current default value if valid, otherwise use the first option.
         if (isset($display_id_options[$form_state_value['display_id']])) {
           $default_display_id = $form_state_value['display_id'];
@@ -84,7 +79,7 @@ class ViewfieldWidgetSelect extends OptionsSelectWidget {
     }
     elseif (isset($item_value['target_id'])) {
       $default_target_id = $item_value['target_id'];
-      $display_id_options = $this->getViewDisplayOptions($item_value['target_id']);
+      $display_id_options = $item->getAllowedDisplayOptions($item_value['target_id']);
       $default_display_id = $item_value['display_id'];
       $default_arguments = $item_value['arguments'];
     }
@@ -230,12 +225,12 @@ class ViewfieldWidgetSelect extends OptionsSelectWidget {
    * @return \Drupal\Core\Ajax\AjaxResponse
    *   The Ajax response.
    */
-  public function ajaxGetViewDisplayOptions(array &$form, FormStateInterface $form_state) {
+  public function ajaxGetAllowedDisplayOptions(array &$form, FormStateInterface $form_state) {
     $trigger = $form_state->getTriggeringElement();
     $form_state_keys = array_slice($trigger['#parents'], 0, -1);
     $form_state_value = $form_state->getValue($form_state_keys);
 
-    $display_options = $this->getViewDisplayOptions($form_state_value['target_id']);
+    $display_options = $trigger['#field_item']->getAllowedDisplayOptions($form_state_value['target_id']);
     $html = '';
     foreach ($display_options as $key => $value) {
       $html .= '<option value="' . $key . '">' . $value . '</option>';
@@ -248,31 +243,6 @@ class ViewfieldWidgetSelect extends OptionsSelectWidget {
     $response->addCommand(new HtmlCommand($selector, $html));
 
     return $response;
-  }
-
-  /**
-   * Get display ID options for a view.
-   *
-   * @param string $entity_id
-   *   The entity_id of the view.
-   *
-   * @return array
-   *   The array of options.
-   */
-  protected function getViewDisplayOptions($entity_id) {
-    $views = Views::getEnabledViews();
-    $view_display_options = array();
-    if (isset($views[$entity_id])) {
-      $allowed_display_types = array_filter($this->getFieldSetting('allowed_display_types'));
-      foreach ($views[$entity_id]->get('display') as $display_id => $display) {
-        if (empty($allowed_display_types) || isset($allowed_display_types[$display['display_plugin']])) {
-          $view_display_options[$display_id] = FieldFilteredMarkup::create($display['display_title']);
-        }
-      }
-      natcasesort($view_display_options);
-    }
-
-    return $view_display_options;
   }
 
   /**
