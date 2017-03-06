@@ -21,8 +21,6 @@ class ViewfieldWidgetSelect extends OptionsSelectWidget {
    * {@inheritdoc}
    */
   public function formElement(FieldItemListInterface $items, $delta, array $element, array &$form, FormStateInterface $form_state) {
-    // Must always show fields on configuration form.
-    $force_default = !$this->isDefaultValueWidget($form_state) ? $this->getFieldSetting('force_default') : FALSE;
     $field_type = $this->fieldDefinition->getType();
     $item = $items[$delta];
 
@@ -30,7 +28,6 @@ class ViewfieldWidgetSelect extends OptionsSelectWidget {
     $element['target_id']['#field_type'] = $field_type;
     $element['target_id']['#field_item'] = $item;
     $element['target_id']['#description'] = $this->t('View name.');
-    $element['target_id']['#access'] = !$force_default;
     $element['target_id']['#ajax'] = array(
       'callback' => array($this, 'ajaxGetDisplayOptions'),
       'event' => 'change',
@@ -100,7 +97,6 @@ class ViewfieldWidgetSelect extends OptionsSelectWidget {
       '#type' => 'select',
       '#options' => $display_id_options,
       '#default_value' => $default_display_id,
-      '#access' => !$force_default,
       '#description' => $this->t('View display to be used.'),
       '#attributes' => array('class' => array($display_id_class)),
       '#weight' => 10,
@@ -111,7 +107,6 @@ class ViewfieldWidgetSelect extends OptionsSelectWidget {
       '#title' => 'Arguments',
       '#type' => 'textfield',
       '#default_value' => $default_arguments,
-      '#access' => !$force_default,
       '#description' => $this->t('A comma separated list of arguments to pass to the selected view display.<br>This field supports tokens.'),
       '#weight' => 20,
       '#states' => array('visible' => $primary_field_visible_test),
@@ -119,7 +114,6 @@ class ViewfieldWidgetSelect extends OptionsSelectWidget {
 
     $element['token_help'] = array(
       '#type' => 'item',
-      '#access' => !$force_default,
       '#weight' => 30,
       '#states' => array('visible' => $primary_field_visible_test),
       'tokens' => array(
@@ -136,6 +130,10 @@ class ViewfieldWidgetSelect extends OptionsSelectWidget {
    */
   protected function formMultipleElements(FieldItemListInterface $items, array &$form, FormStateInterface $form_state) {
     $elements = parent::formMultipleElements($items, $form, $form_state);
+    if ($this->getForceDefault($form_state)) {
+      $elements['#access'] = FALSE;
+    }
+
     $max_delta = $elements['#max_delta'];
     $is_multiple = $elements['#cardinality_multiple'];
 
@@ -243,6 +241,20 @@ class ViewfieldWidgetSelect extends OptionsSelectWidget {
     $response->addCommand(new HtmlCommand($selector, $html));
 
     return $response;
+  }
+
+  /**
+   * Get the force_default setting for this widget.
+   *
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state of the form.
+   *
+   * @return boolean
+   *   The force_default value.
+   */
+  protected function getForceDefault(FormStateInterface $form_state) {
+    // Must always show fields on configuration form.
+    return !$this->isDefaultValueWidget($form_state) ? $this->getFieldSetting('force_default') : FALSE;
   }
 
   /**
