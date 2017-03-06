@@ -110,7 +110,7 @@ class ViewfieldItem extends EntityReferenceItem {
 
     $form['allowed_views'] = array(
       '#type' => 'checkboxes',
-      '#options' => $this->getViewOptions(),
+      '#options' => $this->getViewOptions(FALSE),
       '#title' => $this->t('Allowed views'),
       '#default_value' => $this->getSetting('allowed_views'),
       '#description' => $this->t('Views available for content authors. Leave empty to allow all.'),
@@ -124,7 +124,7 @@ class ViewfieldItem extends EntityReferenceItem {
       '#description' => $this->t('Display types available for content authors. Leave empty to allow all.'),
     );
 
-    $form['#element_validate'][] = array(get_class($this), 'fieldSettingsFormValidate');
+    $form['#element_validate'][] = array(get_called_class(), 'fieldSettingsFormValidate');
 
     return $form;
   }
@@ -152,15 +152,19 @@ class ViewfieldItem extends EntityReferenceItem {
   }
 
   /**
-   * Get an options array of all enabled Views.
+   * Get an options array of views.
    *
    * @return array
    *   The array of options.
    */
-  public function getViewOptions() {
+  public function getViewOptions($filter = TRUE) {
     $views_options = array();
+    $allowed_views = $filter ? array_filter($this->getSetting('allowed_views')) : array();
+
     foreach (Views::getEnabledViews() as $key => $view) {
-      $views_options[$key] = FieldFilteredMarkup::create($view->get('label'));
+      if (empty($allowed_views) || isset($allowed_views[$key])) {
+        $views_options[$key] = FieldFilteredMarkup::create($view->get('label'));
+      }
     }
     natcasesort($views_options);
 
@@ -168,23 +172,7 @@ class ViewfieldItem extends EntityReferenceItem {
   }
 
   /**
-   * Get an options array of all allowed Views.
-   *
-   * @return array
-   *   The array of options.
-   */
-  public function getAllowedViewOptions() {
-    $allowed_views_options = array_intersect_key($this->getViewOptions(), array_filter($this->getSetting('allowed_views')));
-    if (empty($allowed_views_options)) {
-      // At this point, empty $allowed_views_options means allow all.
-      $allowed_views_options = $this->getViewOptions();
-    }
-
-    return $allowed_views_options;
-  }
-
-  /**
-   * Get allowed display ID options for a view.
+   * Get display ID options for a view.
    *
    * @param string $entity_id
    *   The entity_id of the view.
@@ -192,20 +180,20 @@ class ViewfieldItem extends EntityReferenceItem {
    * @return array
    *   The array of options.
    */
-  public function getAllowedDisplayOptions($entity_id) {
+  public function getDisplayOptions($entity_id, $filter = TRUE) {
     $views = Views::getEnabledViews();
-    $allowed_display_types = array_filter($this->getSetting('allowed_display_types'));
-    $view_display_options = array();
+    $allowed_display_types = $filter ? array_filter($this->getSetting('allowed_display_types')) : array();
+    $display_options = array();
     if (isset($views[$entity_id])) {
       foreach ($views[$entity_id]->get('display') as $display_id => $display) {
         if (empty($allowed_display_types) || isset($allowed_display_types[$display['display_plugin']])) {
-          $view_display_options[$display_id] = FieldFilteredMarkup::create($display['display_title']);
+          $display_options[$display_id] = FieldFilteredMarkup::create($display['display_title']);
         }
       }
-      natcasesort($view_display_options);
+      natcasesort($display_options);
     }
 
-    return $view_display_options;
+    return $display_options;
   }
 
   /**
