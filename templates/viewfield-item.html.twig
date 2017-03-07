@@ -57,5 +57,7 @@ set title_classes = [
     <div{{ title_attributes.addClass(title_classes) }}>{{ label }}</div>
   {% endif %}
   {{ title_suffix }}
-  {{ content }}
+  {% block content %}
+    {{ content }}
+  {% endblock %}
 </div>

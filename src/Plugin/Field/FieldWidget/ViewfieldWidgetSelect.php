@@ -58,6 +58,7 @@ class ViewfieldWidgetSelect extends OptionsSelectWidget {
     $default_arguments = NULL;
     $item_value = $items[$delta]->getValue();
     $triggering_element = $form_state->getTriggeringElement();
+
     // Use form state values if available when Ajax callback has run.
     if (isset($triggering_element['#field_type']) && $triggering_element['#field_type'] == $field_type) {
       $form_state_value = $form_state->getValue($form_state_keys);
@@ -130,7 +131,8 @@ class ViewfieldWidgetSelect extends OptionsSelectWidget {
    */
   protected function formMultipleElements(FieldItemListInterface $items, array &$form, FormStateInterface $form_state) {
     $elements = parent::formMultipleElements($items, $form, $form_state);
-    if ($this->getForceDefault($form_state)) {
+    // Must always show fields on configuration form.
+    if (!$this->isDefaultValueWidget($form_state) && $this->getFieldSetting('force_default')) {
       $elements['#access'] = FALSE;
     }
 
@@ -227,8 +229,8 @@ class ViewfieldWidgetSelect extends OptionsSelectWidget {
     $trigger = $form_state->getTriggeringElement();
     $form_state_keys = array_slice($trigger['#parents'], 0, -1);
     $form_state_value = $form_state->getValue($form_state_keys);
-
     $display_options = $trigger['#field_item']->getDisplayOptions($form_state_value['target_id']);
+
     $html = '';
     foreach ($display_options as $key => $value) {
       $html .= '<option value="' . $key . '">' . $value . '</option>';
@@ -241,20 +243,6 @@ class ViewfieldWidgetSelect extends OptionsSelectWidget {
     $response->addCommand(new HtmlCommand($selector, $html));
 
     return $response;
-  }
-
-  /**
-   * Get the force_default setting for this widget.
-   *
-   * @param \Drupal\Core\Form\FormStateInterface $form_state
-   *   The form state of the form.
-   *
-   * @return boolean
-   *   The force_default value.
-   */
-  protected function getForceDefault(FormStateInterface $form_state) {
-    // Must always show fields on configuration form.
-    return !$this->isDefaultValueWidget($form_state) ? $this->getFieldSetting('force_default') : FALSE;
   }
 
   /**

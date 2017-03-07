@@ -154,6 +154,9 @@ class ViewfieldItem extends EntityReferenceItem {
   /**
    * Get an options array of views.
    *
+   * @param boolean|TRUE $filter
+   *   Optional flag to filter the output using the 'allowed_views' setting.
+   *
    * @return array
    *   The array of options.
    */
@@ -176,6 +179,9 @@ class ViewfieldItem extends EntityReferenceItem {
    *
    * @param string $entity_id
    *   The entity_id of the view.
+   * @param boolean|TRUE $filter
+   *   Optional flag to filter the output using the 'allowed_display_types'
+   *   setting.
    *
    * @return array
    *   The array of options.
@@ -185,9 +191,9 @@ class ViewfieldItem extends EntityReferenceItem {
     $allowed_display_types = $filter ? array_filter($this->getSetting('allowed_display_types')) : array();
     $display_options = array();
     if (isset($views[$entity_id])) {
-      foreach ($views[$entity_id]->get('display') as $display_id => $display) {
+      foreach ($views[$entity_id]->get('display') as $key => $display) {
         if (empty($allowed_display_types) || isset($allowed_display_types[$display['display_plugin']])) {
-          $display_options[$display_id] = FieldFilteredMarkup::create($display['display_title']);
+          $display_options[$key] = FieldFilteredMarkup::create($display['display_title']);
         }
       }
       natcasesort($display_options);
