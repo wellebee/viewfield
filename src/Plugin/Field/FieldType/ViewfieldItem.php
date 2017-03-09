@@ -87,6 +87,31 @@ class ViewfieldItem extends EntityReferenceItem {
   /**
    * {@inheritdoc}
    */
+  public function setValue($values, $notify = TRUE) {
+    parent::setValue($values, FALSE);
+
+    if (isset($values['target_id'])) {
+      $view_options = $this->getViewOptions();
+      if (!isset($view_options[$values['target_id']])) {
+        throw new \InvalidArgumentException('The target id passed to the viewfield item is not valid.');
+      }
+      elseif (isset($values['display_id'])) {
+        $display_options = $this->getDisplayOptions($values['target_id']);
+        if (!isset($display_options[$values['display_id']])) {
+          throw new \InvalidArgumentException('The display id passed to the viewfield item is not valid.');
+        }
+      }
+    }
+
+    // Notify the parent if necessary.
+    if ($notify && $this->parent) {
+      $this->parent->onChange($this->getName());
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function storageSettingsForm(array &$form, FormStateInterface $form_state, $has_data) {
     $element = parent::storageSettingsForm($form, $form_state, $has_data);
     // Hide entity type selection.
@@ -186,10 +211,10 @@ class ViewfieldItem extends EntityReferenceItem {
    *   The array of options.
    */
   public function getDisplayOptions($entity_id, $filter = TRUE) {
-    $views = Views::getEnabledViews();
-    $allowed_display_types = $filter ? array_filter($this->getSetting('allowed_display_types')) : [];
     $display_options = [];
+    $views = Views::getEnabledViews();
     if (isset($views[$entity_id])) {
+      $allowed_display_types = $filter ? array_filter($this->getSetting('allowed_display_types')) : [];
       foreach ($views[$entity_id]->get('display') as $key => $display) {
         if (empty($allowed_display_types) || isset($allowed_display_types[$display['display_plugin']])) {
           $display_options[$key] = FieldFilteredMarkup::create($display['display_title']);
