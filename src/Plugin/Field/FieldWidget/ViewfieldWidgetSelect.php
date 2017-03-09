@@ -24,28 +24,28 @@ class ViewfieldWidgetSelect extends OptionsSelectWidget {
     $field_type = $this->fieldDefinition->getType();
     $item = $items[$delta];
 
-    $element = array('target_id' => parent::formElement($items, $delta, $element, $form, $form_state));
+    $element = ['target_id' => parent::formElement($items, $delta, $element, $form, $form_state)];
     $element['target_id']['#field_type'] = $field_type;
     $element['target_id']['#field_item'] = $item;
     $element['target_id']['#description'] = $this->t('View name.');
-    $element['target_id']['#ajax'] = array(
-      'callback' => array($this, 'ajaxGetDisplayOptions'),
+    $element['target_id']['#ajax'] = [
+      'callback' => [$this, 'ajaxGetDisplayOptions'],
       'event' => 'change',
-      'progress' => array(
+      'progress' => [
         'type' => 'throbber',
         'message' => $this->t('Retrieving view displays.'),
-      ),
-    );
+      ],
+    ];
 
     // Set up options for allowed views.
     $empty_label = $this->getEmptyLabel() ?: $this->t('- None -');
     // Always allow '_none' for non-required fields or second and greater delta.
-    $none_option = (!$this->fieldDefinition->isRequired() || $delta > 0) ? array('_none' => $empty_label) : array();
+    $none_option = (!$this->fieldDefinition->isRequired() || $delta > 0) ? ['_none' => $empty_label] : [];
     $element['target_id']['#options'] = array_merge($none_option, $item->getViewOptions());
     $element['target_id']['#multiple'] = FALSE;
 
     // Build an array of keys to retrieve values from $form_state.
-    $form_state_keys = array($this->fieldDefinition->getName(), $delta);
+    $form_state_keys = [$this->fieldDefinition->getName(), $delta];
     if (!empty($form['#parents'])) {
       $form_state_keys = array_merge($form['#parents'], $form_state_keys);
     }
@@ -90,37 +90,37 @@ class ViewfieldWidgetSelect extends OptionsSelectWidget {
 
     // Use primary target_id field to control visibility of secondary ones.
     $primary_field_name = $form_state_keys[0] . '[' . implode('][', array_slice($form_state_keys, 1)) . '][target_id]';
-    $primary_field_visible_test = array(':input[name="' . $primary_field_name . '"]' => array('!value' => '_none'));
+    $primary_field_visible_test = [':input[name="' . $primary_field_name . '"]' => ['!value' => '_none']];
 
-    $element['display_id'] = array(
+    $element['display_id'] = [
       '#title' => 'Display',
       '#type' => 'select',
       '#options' => $display_id_options,
       '#default_value' => $default_display_id,
       '#description' => $this->t('View display to be used.'),
-      '#attributes' => array('class' => array($display_id_class)),
+      '#attributes' => ['class' => [$display_id_class]],
       '#weight' => 10,
-      '#states' => array('visible' => $primary_field_visible_test),
-    );
+      '#states' => ['visible' => $primary_field_visible_test],
+    ];
 
-    $element['arguments'] = array(
+    $element['arguments'] = [
       '#title' => 'Arguments',
       '#type' => 'textfield',
       '#default_value' => $default_arguments,
       '#description' => $this->t('A comma separated list of arguments to pass to the selected view display.<br>This field supports tokens.'),
       '#weight' => 20,
-      '#states' => array('visible' => $primary_field_visible_test),
-    );
+      '#states' => ['visible' => $primary_field_visible_test],
+    ];
 
-    $element['token_help'] = array(
+    $element['token_help'] = [
       '#type' => 'item',
       '#weight' => 30,
-      '#states' => array('visible' => $primary_field_visible_test),
-      'tokens' => array(
+      '#states' => ['visible' => $primary_field_visible_test],
+      'tokens' => [
         '#theme' => 'token_tree_link',
-        '#token_types' => array($items->getEntity()->getEntityTypeId()),
-      ),
-    );
+        '#token_types' => [$items->getEntity()->getEntityTypeId()],
+      ],
+    ];
 
     return $element;
   }
@@ -142,7 +142,7 @@ class ViewfieldWidgetSelect extends OptionsSelectWidget {
       for ($delta = 0; $delta <= $max_delta; $delta++) {
         $element = &$elements[$delta];
         // Change title to 'View #'
-        $element['target_id']['#title'] = $this->t('View @number', array('@number' => $delta + 1));
+        $element['target_id']['#title'] = $this->t('View @number', ['@number' => $delta + 1]);
         // Force title display.
         $element['target_id']['#title_display'] = 'before';
       }
@@ -155,10 +155,10 @@ class ViewfieldWidgetSelect extends OptionsSelectWidget {
       // Wrap single values in a fieldset unless on the default settings form,
       // as long as the field is visible (!force_default).
       if (!$this->isDefaultValueWidget($form_state) && !$this->getFieldSetting('force_default')) {
-        $element += array(
+        $element += [
           '#type' => 'fieldset',
           '#title' => $this->fieldDefinition->getLabel(),
-        );
+        ];
       }
     }
 
@@ -180,7 +180,7 @@ class ViewfieldWidgetSelect extends OptionsSelectWidget {
    */
   public static function validateElement(array $element, FormStateInterface $form_state) {
     if ($element['#required'] && $element['#value'] == '_none') {
-      $form_state->setError($element, t('@name field is required.', array('@name' => $element['#title'])));
+      $form_state->setError($element, t('@name field is required.', ['@name' => $element['#title']]));
     }
 
     // Massage submitted form values.
@@ -192,7 +192,7 @@ class ViewfieldWidgetSelect extends OptionsSelectWidget {
       $values = array_values($element['#value']);
     }
     else {
-      $values = array($element['#value']);
+      $values = [$element['#value']];
     }
 
     // Filter out the 'none' option. Use a strict comparison, because
@@ -203,9 +203,9 @@ class ViewfieldWidgetSelect extends OptionsSelectWidget {
     }
 
     // Transpose selections from field => delta to delta => field.
-//    $items = array();
+//    $items = [];
 //    foreach ($values as $value) {
-//      $items[] = array($element['#key_column'] => $value);
+//      $items[] = [$element['#key_column'] => $value];
 //    }
 //    $form_state->setValueForElement($element, $items);
 

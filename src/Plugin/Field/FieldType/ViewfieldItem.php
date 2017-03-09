@@ -28,20 +28,20 @@ class ViewfieldItem extends EntityReferenceItem {
    * {@inheritdoc}
    */
   public static function defaultStorageSettings() {
-    return array(
+    return [
       'target_type' => 'view',
-    ) + parent::defaultStorageSettings();
+    ] + parent::defaultStorageSettings();
   }
 
   /**
    * {@inheritdoc}
    */
   public static function defaultFieldSettings() {
-    return array(
+    return [
       'force_default' => 0,
-      'allowed_views' => array(),
-      'allowed_display_types' => array('block' => 'block'),
-    ) + parent::defaultFieldSettings();
+      'allowed_views' => [],
+      'allowed_display_types' => ['block' => 'block'],
+    ] + parent::defaultFieldSettings();
   }
 
   /**
@@ -51,17 +51,17 @@ class ViewfieldItem extends EntityReferenceItem {
     $schema = parent::schema($field_definition);
     $schema['columns']['target_id']['description'] = 'The ID of the view.';
 
-    $schema['columns']['display_id'] = array(
+    $schema['columns']['display_id'] = [
       'description' => 'The ID of the view display.',
       'type' => 'varchar',
       'length' => 255,
-    );
+    ];
 
-    $schema['columns']['arguments'] = array(
+    $schema['columns']['arguments'] = [
       'description' => 'Arguments to be passed to the display.',
       'type' => 'varchar',
       'length' => 255,
-    );
+    ];
 
     return $schema;
   }
@@ -99,32 +99,32 @@ class ViewfieldItem extends EntityReferenceItem {
    * {@inheritdoc}
    */
   public function fieldSettingsForm(array $form, FormStateInterface $form_state) {
-    $form = array();
+    $form = [];
 
-    $form['force_default'] = array(
+    $form['force_default'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Always use default value'),
       '#default_value' => $this->getSetting('force_default'),
       '#description' => $this->t('Hides this field in entity edit forms and enforces the configured default value for all entities in the bundle, making it unnecessary to assign values individually to each one.<br>If this is checked, you must provide a default value.'),
-    );
+    ];
 
-    $form['allowed_views'] = array(
+    $form['allowed_views'] = [
       '#type' => 'checkboxes',
       '#options' => $this->getViewOptions(FALSE),
       '#title' => $this->t('Allowed views'),
       '#default_value' => $this->getSetting('allowed_views'),
       '#description' => $this->t('Views available for content authors. Leave empty to allow all.'),
-    );
+    ];
 
-    $form['allowed_display_types'] = array(
+    $form['allowed_display_types'] = [
       '#type' => 'checkboxes',
       '#options' => $this->getDisplayTypeOptions(),
       '#title' => $this->t('Allowed display types'),
       '#default_value' => $this->getSetting('allowed_display_types'),
       '#description' => $this->t('Display types available for content authors. Leave empty to allow all.'),
-    );
+    ];
 
-    $form['#element_validate'][] = array(get_called_class(), 'fieldSettingsFormValidate');
+    $form['#element_validate'][] = [get_called_class(), 'fieldSettingsFormValidate'];
 
     return $form;
   }
@@ -144,9 +144,9 @@ class ViewfieldItem extends EntityReferenceItem {
       $default_value = $form_state->getValue('default_value_input');
       $field_name = $form_state->getFormObject()->getEntity()->getName();
       if (empty($default_value[$field_name][0]['target_id']) || $default_value[$field_name][0]['target_id'] == '_none') {
-        $form_state->setErrorByName('default_value_input', t('%title requires a default value.', array(
+        $form_state->setErrorByName('default_value_input', t('%title requires a default value.', [
           '%title' => $form['force_default']['#title'],
-        )));
+        ]));
       }
     }
   }
@@ -161,8 +161,8 @@ class ViewfieldItem extends EntityReferenceItem {
    *   The array of options.
    */
   public function getViewOptions($filter = TRUE) {
-    $views_options = array();
-    $allowed_views = $filter ? array_filter($this->getSetting('allowed_views')) : array();
+    $views_options = [];
+    $allowed_views = $filter ? array_filter($this->getSetting('allowed_views')) : [];
     foreach (Views::getEnabledViews() as $key => $view) {
       if (empty($allowed_views) || isset($allowed_views[$key])) {
         $views_options[$key] = FieldFilteredMarkup::create($view->get('label'));
@@ -187,8 +187,8 @@ class ViewfieldItem extends EntityReferenceItem {
    */
   public function getDisplayOptions($entity_id, $filter = TRUE) {
     $views = Views::getEnabledViews();
-    $allowed_display_types = $filter ? array_filter($this->getSetting('allowed_display_types')) : array();
-    $display_options = array();
+    $allowed_display_types = $filter ? array_filter($this->getSetting('allowed_display_types')) : [];
+    $display_options = [];
     if (isset($views[$entity_id])) {
       foreach ($views[$entity_id]->get('display') as $key => $display) {
         if (empty($allowed_display_types) || isset($allowed_display_types[$display['display_plugin']])) {
@@ -208,7 +208,7 @@ class ViewfieldItem extends EntityReferenceItem {
    *   The array of options.
    */
   public function getDisplayTypeOptions() {
-    $display_type_options = array();
+    $display_type_options = [];
     foreach (Views::pluginList() as $key => $type) {
       if ($type['type'] == 'display') {
         $display_type_options[str_replace('display:', '', $key)] = FieldFilteredMarkup::create($type['title']);

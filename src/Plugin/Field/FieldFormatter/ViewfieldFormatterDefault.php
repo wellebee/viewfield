@@ -21,11 +21,11 @@ class ViewfieldFormatterDefault extends FormatterBase {
    * {@inheritdoc}
    */
   public static function defaultSettings() {
-    return array(
+    return [
       'view_title' => 'hidden',
       'always_build_output' => 0,
       'empty_view_title' => 'hidden',
-    ) + parent::defaultSettings();
+    ] + parent::defaultSettings();
   }
 
   /**
@@ -34,29 +34,29 @@ class ViewfieldFormatterDefault extends FormatterBase {
   public function settingsForm(array $form, FormStateInterface $form_state) {
     $form = parent::settingsForm($form, $form_state);
 
-    $form['view_title'] = array(
+    $form['view_title'] = [
       '#type' => 'select',
       '#title' => $this->t('View title'),
       '#options' => $this->getFieldLabelOptions(),
       '#default_value' => $this->getSetting('view_title'),
       '#description' => $this->t('Option to render the view display title.'),
-    );
-    $form['always_build_output'] = array(
+    ];
+    $form['always_build_output'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Always build output'),
       '#default_value' => $this->getSetting('always_build_output'),
       '#description' => $this->t('Produce renderable output even if the view produces no results.<br>This option may be useful for some specialized cases, e.g., to force rendering of an attachment display even if there are no view results.'),
-    );
+    ];
 
     $always_build_output_name = 'fields[' . $this->fieldDefinition->getName() . '][settings_edit_form][settings][always_build_output]';
-    $form['empty_view_title'] = array(
+    $form['empty_view_title'] = [
       '#type' => 'select',
       '#title' => $this->t('Empty view title'),
       '#options' => $this->getFieldLabelOptions(),
       '#default_value' => $this->getSetting('empty_view_title'),
       '#description' => $this->t('Option to output the view display title even when the view produces no results.<br>This option has an effect only when <em>Always build output</em> is also selected.'),
-      '#states' => array('visible' => array(':input[name="' . $always_build_output_name . '"]' => array('checked' => TRUE))),
-    );
+      '#states' => ['visible' => [':input[name="' . $always_build_output_name . '"]' => ['checked' => TRUE]]],
+    ];
 
     return $form;
   }
@@ -67,18 +67,18 @@ class ViewfieldFormatterDefault extends FormatterBase {
   public function settingsSummary() {
     $settings = $this->getSettings();
     $label_options = $this->getFieldLabelOptions();
-    $summary = array();
+    $summary = [];
 
-    $summary[] = $this->t('Show view title: @view_title', array(
+    $summary[] = $this->t('Show view title: @view_title', [
       '@view_title' => $label_options[$settings['view_title']],
-    ));
-    $summary[] = $this->t('Always build output: @always_build_output', array(
+    ]);
+    $summary[] = $this->t('Always build output: @always_build_output', [
       '@always_build_output' => $this->getCheckboxLabel($settings['always_build_output']),
-    ));
+    ]);
     if ($settings['always_build_output']) {
-      $summary[] = $this->t('Show empty view title: @show_empty_view_title', array(
+      $summary[] = $this->t('Show empty view title: @show_empty_view_title', [
         '@show_empty_view_title' => $label_options[$settings['empty_view_title']],
-      ));
+      ]);
     }
 
     return $summary;
@@ -110,23 +110,23 @@ class ViewfieldFormatterDefault extends FormatterBase {
       $values = $this->fieldDefinition->getDefaultValue($entity);
     }
     else {
-      $values = array();
+      $values = [];
       foreach ($items as $delta => $item) {
         $values[$delta] = $item->getValue();
       }
     }
 
     // @todo Design and implement a caching strategy.
-    $elements = array(
-      '#cache' => array(
+    $elements = [
+      '#cache' => [
         'max-age' => 0,
-      ),
-    );
+      ],
+    ];
 
     $always_build_output = $this->getSetting('always_build_output');
     $view_title = $this->getSetting('view_title');
     $empty_view_title = $this->getSetting('empty_view_title');
-    $elements = array();
+    $elements = [];
 
     foreach ($values as $delta => $value) {
       $target_id = $value['target_id'];
@@ -146,7 +146,7 @@ class ViewfieldFormatterDefault extends FormatterBase {
       $view->execute();
 
       if (!empty($view->result) || $always_build_output) {
-        $elements[$delta] = array(
+        $elements[$delta] = [
           '#theme' => 'viewfield_item',
           '#content' => $view->buildRenderable($display_id, $arguments),
           '#title' => $view->getTitle(),
@@ -155,7 +155,7 @@ class ViewfieldFormatterDefault extends FormatterBase {
           '#field_name' => $this->fieldDefinition->getName(),
           '#view_id' => $target_id,
           '#display_id' => $display_id,
-        );
+        ];
       }
     }
 
@@ -174,7 +174,7 @@ class ViewfieldFormatterDefault extends FormatterBase {
    *   The array of processed arguments.
    */
   protected function processArguments($argument_string, $entity) {
-    $arguments = array();
+    $arguments = [];
 
     if (!empty($argument_string)) {
       $pos = 0;
@@ -207,7 +207,7 @@ class ViewfieldFormatterDefault extends FormatterBase {
       }
 
       $token_service = \Drupal::token();
-      $token_data = array($entity->getEntityTypeId() => $entity);
+      $token_data = [$entity->getEntityTypeId() => $entity];
       foreach ($arguments as $key => $value) {
         $arguments[$key] = $token_service->replace($value, $token_data);
       }
@@ -238,11 +238,11 @@ class ViewfieldFormatterDefault extends FormatterBase {
    * @see EntityViewDisplayEditForm::getFieldLabelOptions()
    */
   protected function getFieldLabelOptions() {
-    return array(
+    return [
       'above' => $this->t('Above'),
       'inline' => $this->t('Inline'),
       'hidden' => '- ' . $this->t('Hidden') . ' -',
       'visually_hidden' => '- ' . $this->t('Visually Hidden') . ' -',
-    );
+    ];
   }
 }
