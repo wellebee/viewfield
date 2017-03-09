@@ -41,8 +41,7 @@ class ViewfieldWidgetSelect extends OptionsSelectWidget {
     $empty_label = $this->getEmptyLabel() ?: $this->t('- None -');
     // Always allow '_none' for non-required fields or second and greater delta.
     $none_option = (!$this->fieldDefinition->isRequired() || $delta > 0) ? array('_none' => $empty_label) : array();
-    $allowed_views_options = $item->getViewOptions();
-    $element['target_id']['#options'] = array_merge($none_option, $allowed_views_options);
+    $element['target_id']['#options'] = array_merge($none_option, $item->getViewOptions());
     $element['target_id']['#multiple'] = FALSE;
 
     // Build an array of keys to retrieve values from $form_state.
@@ -56,7 +55,7 @@ class ViewfieldWidgetSelect extends OptionsSelectWidget {
     $display_id_options = NULL;
     $default_display_id = NULL;
     $default_arguments = NULL;
-    $item_value = $items[$delta]->getValue();
+    $item_value = $item->getValue();
     $triggering_element = $form_state->getTriggeringElement();
 
     // Use form state values if available when Ajax callback has run.

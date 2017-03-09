@@ -43,10 +43,10 @@ function viewfield_help($route_name, RouteMatchInterface $route_match) {
       $output .= '<dd>' . t('On the <em>Manage display</em> page are options to render the view display title in the output. Choose from <em>Above</em>, <em>Inline</em>, <em>Hidden</em>, <em>Visually Hidden</em>.') . '</dd>';
 
       $output .= '<dt>' . t('Always build output setting') . '</dt>';
-      $output .= '<dd>' . t('On the <em>Manage display</em> page is a setting to produce rendered output even if the view produces no results. This option may be useful for some specialized cases, e.g., to force rendering of an attachment display even if there are no view results.') . '</dd>';
+      $output .= '<dd>' . t('On the <em>Manage display</em> page is a setting to produce renderable output even if the view produces no results. This option may be useful for some specialized cases, e.g., to force rendering of an attachment display even if there are no view results.') . '</dd>';
 
       $output .= '<dt>' . t('Empty view title setting') . '</dt>';
-      $output .= '<dd>' . t('On the <em>Manage display</em> page are options to render the view display title even when the view produces no results. Choose from <em>Above</em>, <em>Inline</em>, <em>Hidden</em>, <em>Visually Hidden</em>. This option has an effect only when <em>Always build output</em> is selected.') . '</dd>';
+      $output .= '<dd>' . t('On the <em>Manage display</em> page are options to output the view display title even when the view produces no results. Choose from <em>Above</em>, <em>Inline</em>, <em>Hidden</em>, <em>Visually Hidden</em>. This option has an effect only when <em>Always build output</em> is selected.') . '</dd>';
 
       $output .= '<dt>' . t('Twig theming') . '</dt>';
       $output .= '<dd>' . t('Viewfield provides default theming with the <code>viewfield.html.twig</code> and <code>viewfield-item.html.twig</code> templates, which may each be overridden. Enable Twig debugging to view file name suggestions in the rendered HTML.') . '</dd>';

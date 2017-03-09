@@ -154,8 +154,8 @@ class ViewfieldItem extends EntityReferenceItem {
   /**
    * Get an options array of views.
    *
-   * @param boolean|TRUE $filter
-   *   Optional flag to filter the output using the 'allowed_views' setting.
+   * @param boolean $filter
+   *   (optional) Flag to filter the output using the 'allowed_views' setting.
    *
    * @return array
    *   The array of options.
@@ -163,7 +163,6 @@ class ViewfieldItem extends EntityReferenceItem {
   public function getViewOptions($filter = TRUE) {
     $views_options = array();
     $allowed_views = $filter ? array_filter($this->getSetting('allowed_views')) : array();
-
     foreach (Views::getEnabledViews() as $key => $view) {
       if (empty($allowed_views) || isset($allowed_views[$key])) {
         $views_options[$key] = FieldFilteredMarkup::create($view->get('label'));
@@ -179,8 +178,8 @@ class ViewfieldItem extends EntityReferenceItem {
    *
    * @param string $entity_id
    *   The entity_id of the view.
-   * @param boolean|TRUE $filter
-   *   Optional flag to filter the output using the 'allowed_display_types'
+   * @param boolean $filter
+   *   (optional) Flag to filter the output using the 'allowed_display_types'
    *   setting.
    *
    * @return array

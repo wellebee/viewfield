@@ -25,10 +25,10 @@ View title setting
 On the <em>Manage display</em> page are options to render the view display title in the output. Choose from <em>Above</em>, <em>Inline</em>, <em>Hidden</em>, <em>Visually Hidden</em>.
 
 Always build output setting
-On the <em>Manage display</em> page is a setting to produce rendered output even if the view produces no results. This option may be useful for some specialized cases, e.g., to force rendering of an attachment display even if there are no view results.
+On the <em>Manage display</em> page is a setting to produce renderable output even if the view produces no results. This option may be useful for some specialized cases, e.g., to force rendering of an attachment display even if there are no view results.
 
 Empty view title setting
-On the <em>Manage display</em> page are options to render the view display title even when the view produces no results. Choose from <em>Above</em>, <em>Inline</em>, <em>Hidden</em>, <em>Visually Hidden</em>. This option has an effect only when <em>Always build output</em> is selected.
+On the <em>Manage display</em> page are options to output the view display title even when the view produces no results. Choose from <em>Above</em>, <em>Inline</em>, <em>Hidden</em>, <em>Visually Hidden</em>. This option has an effect only when <em>Always build output</em> is selected.
 
 Twig theming
 Viewfield provides default theming with the <code>viewfield.html.twig</code> and <code>viewfield-item.html.twig</code> templates, which may each be overridden. Enable Twig debugging to view file name suggestions in the rendered HTML.
