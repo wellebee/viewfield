@@ -11,6 +11,7 @@ namespace Drupal\viewfield\Plugin\Field\FieldFormatter;
 use Drupal\Core\Field\FormatterBase;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\views\Views;
+use Drupal\Component\Serialization\Json;
 
 /**
  * Plugin implementation of the 'viewfield_default' formatter.
@@ -35,6 +36,10 @@ class ViewfieldDefaultFormatter extends FormatterBase {
       $entity = $item->getEntity();
       list($view_name, $view_display) = explode('|', $item->vname, 2);
       $view = Views::getView($view_name);
+      $settings = [];
+      if (!empty($item->settings)) {
+        $settings = Json::decode($item->settings);
+      }
       $elements[$delta] = array(
         '#type' => 'viewfield',
         '#view' => $view,
@@ -45,9 +50,11 @@ class ViewfieldDefaultFormatter extends FormatterBase {
         '#entity_type' => $entity->getEntityTypeId(),
         '#entity_id' => $entity->id(),
         '#entity' => $entity,
+        '#exposed_settings' => $settings,
         '#theme' => 'viewfield_formatter_default',
       );
     }
     return $elements;
   }
+
 }

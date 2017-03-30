@@ -21,3 +21,6 @@ field.value.viewfield:
     vargs:
       type: string
       label: 'Default view arguments'
+    settings:
+      type: string
+      label: 'Default view settings'

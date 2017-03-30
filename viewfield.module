@@ -1,12 +1,11 @@
 <?php
 
-use \Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Url;
-
 /**
  * @file
  * Defines a field type to display a view.
  */
+
+use Drupal\Core\Url;
 
 /**
  * Implements hook_theme().
@@ -24,8 +23,10 @@ function viewfield_theme() {
  */
 function viewfield_preprocess_viewfield_formatter_default(&$variables) {
   $element = $variables['element'];
-  $view_el = $element['#view']->preview($element['#view_display'], array($element['#view_arguments']));
-  $output = render ($view_el);
+  $element['#view']->setExposedInput($element['#exposed_settings']);
+  $args = !empty($element['#view_arguments']) ? array($element['#view_arguments']) : array();
+  $view_el = $element['#view']->preview($element['#view_display'], $args);
+  $output = render($view_el);
   $variables['output'] = $output;
 }
 
@@ -42,7 +43,7 @@ function viewfield_element_info() {
 }
 
 /**
- * #pre_render callback for a viewfield field.
+ * pre_render callback for a viewfield field.
  *
  * @see viewfield_post_render()
  */
@@ -75,7 +76,7 @@ function viewfield_pre_render($element) {
 }
 
 /**
- * #post_render callback for a viewfield field.
+ * post_render callback for a viewfield field.
  *
  * @see viewfield_pre_render()
  */
@@ -85,9 +86,8 @@ function viewfield_post_render($content, $element) {
   return $content;
 }
 
-
 /**
- * Perform argument replacement
+ * Perform argument replacement.
  */
 function _viewfield_get_view_args($vargs, $entity_type, $entity) {
   $args = array();

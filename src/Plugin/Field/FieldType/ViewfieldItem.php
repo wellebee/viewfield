@@ -13,7 +13,6 @@ use Drupal\Core\Field\FieldItemBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\views\Views;
 
-
 /**
  * Plugin implementation of the 'viewfield' field type.
  *
@@ -58,14 +57,16 @@ class ViewfieldItem extends FieldItemBase {
         'vname' => array(
           'type' => 'varchar',
           'not null' => FALSE,
-          // Views requires at least 96 chars for the view name and display, plus
-          // we need 1 for our delimiter. Round up to a common value of 128.
           'length' => 128,
         ),
         'vargs' => array(
           'type' => 'varchar',
           'not null' => FALSE,
-          'length' => 255, //viewfield_field_instance_settings_form_validate
+          'length' => 255,
+        ),
+        'settings' => array(
+          'type' => 'text',
+          'size' => 'normal',
         ),
       ),
     );
@@ -79,6 +80,8 @@ class ViewfieldItem extends FieldItemBase {
       ->setLabel(t('View name'));
     $properties['vargs'] = DataDefinition::create('string')
       ->setLabel(t('View args'));
+    $properties['settings'] = DataDefinition::create('string')
+      ->setLabel(t('View settings'));
     return $properties;
   }
 
@@ -127,4 +130,5 @@ class ViewfieldItem extends FieldItemBase {
       }
     }
   }
+
 }
