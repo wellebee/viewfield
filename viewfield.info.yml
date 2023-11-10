@@ -3,6 +3,7 @@ type: module
 description: 'Defines a field type to display a view.'
 version: VERSION
 core: 8.x
+core_version_requirement: ^8 || ^9 || ^10
 dependencies:
   - views
   - field
